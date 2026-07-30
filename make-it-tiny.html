@@ -1,0 +1,3337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Make It Tiny — Shrink your images, offline & private</title>
+
+<!-- ============================ Metadata / SEO ============================ -->
+<meta name="description" content="Make It Tiny is a free, offline image optimizer. Drag, drop, or paste images to shrink their file size with WebP, JPEG, PNG, or AVIF — all in your browser. Nothing is uploaded.">
+<meta name="author" content="Al Sweigart">
+<meta name="theme-color" content="#0f766e">
+
+<!-- Open Graph -->
+<meta property="og:type" content="website">
+<meta property="og:title" content="Make It Tiny — Shrink your images, offline & private">
+<meta property="og:description" content="Drag, drop, or paste images to shrink their file size with WebP, JPEG, PNG, or AVIF — entirely in your browser. Nothing is uploaded.">
+<meta property="og:image" content="make-it-tiny-og-preview.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+
+<!-- Twitter -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Make It Tiny — Shrink your images, offline & private">
+<meta name="twitter:description" content="Drag, drop, or paste images to shrink their file size with WebP, JPEG, PNG, or AVIF — entirely in your browser.">
+<meta name="twitter:image" content="make-it-tiny-og-preview.png">
+
+<!-- Inline SVG favicon (a square being compressed by inward arrows). -->
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22 viewBox%3D%220 0 48 48%22%3E%3Crect x%3D%222%22 y%3D%222%22 width%3D%2244%22 height%3D%2244%22 rx%3D%2211%22 fill%3D%22%230f766e%22%2F%3E%3Crect x%3D%2217%22 y%3D%2217%22 width%3D%2214%22 height%3D%2214%22 rx%3D%223%22 fill%3D%22%23ffffff%22%2F%3E%3Cg stroke%3D%22%23ffffff%22 stroke-width%3D%222.6%22 stroke-linecap%3D%22round%22 stroke-linejoin%3D%22round%22 fill%3D%22none%22%3E%3Cpath d%3D%22M8 8l6 6M14 14h-6M14 14v-6%22%2F%3E%3Cpath d%3D%22M40 8l-6 6M34 14h6M34 14v-6%22%2F%3E%3Cpath d%3D%22M8 40l6-6M14 34h-6M14 34v6%22%2F%3E%3Cpath d%3D%22M40 40l-6-6M34 34h6M34 34v6%22%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E">
+
+<style>
+/* ============================== Theme tokens ============================== */
+:root {
+  --bg: #f4f6f8;
+  --surface: #ffffff;
+  --surface-2: #eef1f4;
+  --border: #d5dbe1;
+  --text: #182129;
+  --text-dim: #5a6672;
+  --accent: #0f766e;         /* teal */
+  --accent-strong: #0b5a54;
+  --accent-contrast: #ffffff;
+  --good: #17803d;
+  --warn: #b45309;
+  --danger: #b91c1c;
+  --shadow: 0 1px 3px rgba(16, 24, 32, .08), 0 8px 24px rgba(16, 24, 32, .06);
+  --radius: 14px;
+  --focus: 0 0 0 3px rgba(15, 118, 110, .45);
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0d1117;
+    --surface: #161b22;
+    --surface-2: #1c232d;
+    --border: #2b333d;
+    --text: #e6edf3;
+    --text-dim: #9aa7b4;
+    --accent: #2dd4bf;
+    --accent-strong: #14b8a6;
+    --accent-contrast: #04201d;
+    --good: #4ade80;
+    --warn: #fbbf24;
+    --danger: #f87171;
+    --shadow: 0 1px 3px rgba(0, 0, 0, .4), 0 10px 30px rgba(0, 0, 0, .35);
+    --focus: 0 0 0 3px rgba(45, 212, 191, .5);
+  }
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body {
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.5;
+  -webkit-text-size-adjust: 100%;
+  min-height: 100vh;
+}
+a { color: var(--accent); }
+a:focus-visible, button:focus-visible, select:focus-visible,
+input:focus-visible, [tabindex]:focus-visible {
+  outline: none;
+  box-shadow: var(--focus);
+  border-radius: 8px;
+}
+
+.wrap { max-width: 1000px; margin: 0 auto; padding: 20px 16px 64px; }
+
+/* ================================ Header ================================= */
+header.top {
+  display: flex; align-items: center; gap: 14px;
+  padding: 6px 2px 20px;
+}
+.logo { width: 44px; height: 44px; flex: 0 0 auto; }
+.titles { flex: 1 1 auto; min-width: 0; }
+.titles h1 { font-size: clamp(1.4rem, 4vw, 2rem); margin: 0; letter-spacing: -.02em; }
+.titles p { margin: 2px 0 0; color: var(--text-dim); font-size: .95rem; }
+.lang-select {
+  flex: 0 0 auto;
+  width: auto;                 /* override the global select width:100% */
+  background: var(--surface); color: var(--text);
+  border: 1px solid var(--border); border-radius: 10px;
+  padding: 8px 10px; font-size: 1rem; cursor: pointer;
+}
+
+/* ============================== Drop zone ================================ */
+.dropzone {
+  position: relative;
+  border: 2px dashed var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  padding: 40px 20px;
+  text-align: center;
+  transition: border-color .15s, background .15s, transform .05s;
+  cursor: pointer;
+}
+.dropzone:hover { border-color: var(--accent); }
+.dropzone.drag { border-color: var(--accent); background: var(--surface-2); }
+.dropzone .big { font-size: 1.15rem; font-weight: 600; margin: 8px 0 4px; }
+.dropzone .hint { color: var(--text-dim); font-size: .9rem; }
+.dropzone .cloud { width: 52px; height: 52px; color: var(--accent); }
+.dropzone kbd {
+  font: inherit; font-size: .82em;
+  background: var(--surface-2); border: 1px solid var(--border);
+  border-radius: 6px; padding: 1px 6px;
+}
+
+/* =============================== Controls ================================ */
+.controls {
+  margin-top: 18px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 16px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px 22px;
+  align-items: start;
+}
+.field { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.field > label, .field > .label { font-weight: 600; font-size: .9rem; }
+.field .sub { color: var(--text-dim); font-size: .8rem; font-weight: 400; }
+.seg { display: flex; flex-wrap: wrap; gap: 6px; }
+.seg button {
+  flex: 1 1 auto;
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--text);
+  padding: 9px 8px;
+  border-radius: 10px;
+  font-size: .9rem; font-weight: 600;
+  cursor: pointer;
+  transition: background .12s, border-color .12s, color .12s;
+}
+.seg button[aria-pressed="true"] {
+  background: var(--accent); color: var(--accent-contrast);
+  border-color: var(--accent);
+}
+/* The resize size fields are plain text inputs (no spinner arrows — users just type). */
+select, input[type="number"], input.numfield {
+  background: var(--surface); color: var(--text);
+  border: 1px solid var(--border); border-radius: 10px;
+  padding: 9px 10px; font-size: .95rem; width: 100%;
+}
+input[type="range"] { width: 100%; accent-color: var(--accent); }
+.range-row { display: flex; align-items: center; gap: 10px; }
+.range-row output {
+  min-width: 3.2ch; text-align: right; font-variant-numeric: tabular-nums;
+  font-weight: 700; color: var(--accent);
+}
+.check { display: flex; align-items: center; gap: 9px; font-size: .92rem; cursor: pointer; }
+.check input { width: 18px; height: 18px; accent-color: var(--accent); }
+.resize-inputs { display: flex; align-items: center; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
+.resize-inputs input { width: 78px; }
+.resize-sub { display: inline-flex; align-items: center; gap: 8px; }
+.resize-sub[hidden] { display: none; }  /* class display would otherwise beat [hidden] */
+.resize-inputs.disabled { opacity: .45; pointer-events: none; }
+.note { font-size: .78rem; color: var(--text-dim); }
+.note.warn { color: var(--warn); }
+
+/* =============================== Progress ================================ */
+.progress {
+  display: flex; align-items: center; gap: 12px;
+  margin-top: 16px; padding: 12px 16px;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); box-shadow: var(--shadow);
+}
+.progress[hidden] { display: none; }
+.progress-bar { flex: 1 1 auto; height: 8px; background: var(--surface-2); border-radius: 999px; overflow: hidden; }
+.progress-bar > i { display: block; height: 100%; width: 0; background: var(--accent); transition: width .2s; }
+.progress-text { font-size: .85rem; font-weight: 600; color: var(--text-dim); font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+/* ============================== Summary bar ============================== */
+.summary {
+  display: none;
+  margin-top: 18px;
+  flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 12px 16px; box-shadow: var(--shadow);
+}
+.summary.show { display: flex; }
+.summary .stat b { font-size: 1.05rem; }
+.summary .actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.btn {
+  border: 1px solid var(--border); background: var(--surface-2); color: var(--text);
+  padding: 9px 14px; border-radius: 10px; font-weight: 600; font-size: .9rem;
+  cursor: pointer; display: inline-flex; align-items: center; gap: 7px;
+}
+.btn:hover { border-color: var(--accent); }
+.btn.primary { background: var(--accent); color: var(--accent-contrast); border-color: var(--accent); }
+.btn.primary:hover { background: var(--accent-strong); }
+.btn:disabled { opacity: .5; cursor: not-allowed; }
+.btn svg { width: 16px; height: 16px; }
+
+/* ================================ Items ================================= */
+.items { margin-top: 16px; display: flex; flex-direction: column; gap: 12px; }
+.item {
+  display: grid;
+  grid-template-columns: 76px 1fr auto;
+  gap: 14px; align-items: center;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 12px; box-shadow: var(--shadow);
+}
+.thumb {
+  width: 76px; height: 76px; border-radius: 10px; object-fit: cover;
+  background: var(--surface-2); border: 1px solid var(--border);
+  /* checkerboard so transparency is visible */
+  background-image:
+    linear-gradient(45deg, var(--surface-2) 25%, transparent 25%),
+    linear-gradient(-45deg, var(--surface-2) 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, var(--surface-2) 75%),
+    linear-gradient(-45deg, transparent 75%, var(--surface-2) 75%);
+  background-size: 16px 16px;
+  background-position: 0 0, 0 8px, 8px -8px, -8px 0;
+}
+.item .meta { min-width: 0; }
+.item .name { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.item .dims { color: var(--text-dim); font-size: .82rem; }
+.sizes { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; font-size: .9rem; margin-top: 4px; }
+.sizes .from { color: var(--text-dim); text-decoration: line-through; }
+.sizes .to { font-weight: 700; }
+.badge {
+  font-size: .78rem; font-weight: 700; padding: 2px 8px; border-radius: 999px;
+  background: rgba(23,128,61,.14); color: var(--good);
+}
+.badge.up { background: rgba(180,83,9,.16); color: var(--warn); }
+.badge.busy { background: var(--surface-2); color: var(--text-dim); }
+.bar { height: 6px; background: var(--surface-2); border-radius: 999px; overflow: hidden; margin-top: 8px; }
+.bar > i { display: block; height: 100%; background: var(--good); width: 0; transition: width .3s; }
+.item .side { display: flex; flex-direction: column; gap: 6px; align-items: stretch; }
+.icon-btn {
+  border: 1px solid var(--border); background: var(--surface-2); color: var(--text);
+  border-radius: 9px; padding: 7px 10px; cursor: pointer; font-size: .82rem; font-weight: 600;
+  display: inline-flex; align-items: center; gap: 6px; justify-content: center;
+}
+.icon-btn:hover { border-color: var(--accent); }
+.icon-btn svg { width: 14px; height: 14px; }
+.spinner {
+  width: 16px; height: 16px; border: 2px solid var(--border); border-top-color: var(--accent);
+  border-radius: 50%; animation: spin .7s linear infinite; display: inline-block;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.item .err { color: var(--danger); font-size: .82rem; }
+
+/* ================================ Footer ================================ */
+footer.credit {
+  margin-top: 40px; padding-top: 20px; border-top: 1px solid var(--border);
+  color: var(--text-dim); font-size: .85rem; text-align: center;
+}
+footer.credit a { font-weight: 600; }
+.toast {
+  position: fixed; left: 50%; bottom: 22px; transform: translateX(-50%) translateY(20px);
+  background: var(--text); color: var(--bg); padding: 10px 16px; border-radius: 10px;
+  font-size: .9rem; font-weight: 600; opacity: 0; pointer-events: none;
+  transition: opacity .2s, transform .2s; z-index: 50;
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+.visually-hidden {
+  position: absolute !important; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+@media (max-width: 560px) {
+  .item { grid-template-columns: 60px 1fr; }
+  .thumb { width: 60px; height: 60px; }
+  .item .side { grid-column: 1 / -1; flex-direction: row; }
+  .item .side .icon-btn { flex: 1; }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="top">
+    <!-- Logo mirrors the favicon. -->
+    <svg class="logo" viewBox="0 0 48 48" fill="none" aria-hidden="true" role="img">
+      <rect x="2" y="2" width="44" height="44" rx="11" fill="var(--accent)"/>
+      <rect x="17" y="17" width="14" height="14" rx="3" fill="var(--accent-contrast)"/>
+      <g stroke="var(--accent-contrast)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M8 8 l6 6 M14 14 h-6 M14 14 v-6"/>
+        <path d="M40 8 l-6 6 M34 14 h6 M34 14 v-6"/>
+        <path d="M8 40 l6 -6 M14 34 h-6 M14 34 v6"/>
+        <path d="M40 40 l-6 -6 M34 34 h6 M34 34 v6"/>
+      </g>
+    </svg>
+    <div class="titles">
+      <h1 data-i18n="app_name">Make It Tiny</h1>
+      <p data-i18n="tagline">Shrink image file sizes — right here in your browser. Nothing is uploaded.</p>
+    </div>
+    <!-- Bare language dropdown, populated from LANGS with an emoji flag per option. -->
+    <select class="lang-select" id="lang" aria-label="Language"></select>
+  </header>
+
+  <!-- ============================ Drop zone ============================ -->
+  <div class="dropzone" id="dropzone" role="button" tabindex="0"
+       aria-label="Add images: drag and drop, click to choose files, or paste">
+    <svg class="cloud" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+         stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M12 16V7m0 0-3.5 3.5M12 7l3.5 3.5"/>
+      <path d="M7 18a4.5 4.5 0 0 1-.5-8.97A6 6 0 0 1 18 8.5a3.5 3.5 0 0 1-.5 6.98"/>
+    </svg>
+    <div class="big" data-i18n="drop_title">Drop images here</div>
+    <div class="hint">
+      <span data-i18n="drop_sub">or click to choose files, or paste with</span>
+      <kbd>Ctrl</kbd>+<kbd>V</kbd>
+    </div>
+    <input type="file" id="fileInput" accept="image/*" multiple class="visually-hidden">
+  </div>
+
+  <!-- ============================ Controls ============================ -->
+  <section class="controls" aria-label="Optimization settings">
+    <div class="field">
+      <span class="label" data-i18n="format_label">Output format</span>
+      <div class="seg" id="formatSeg" role="group" aria-label="Output format">
+        <button type="button" data-format="original" aria-pressed="true" data-i18n="format_original">Original</button>
+        <button type="button" data-format="webp" aria-pressed="false">WebP</button>
+        <button type="button" data-format="jpeg" aria-pressed="false">JPEG</button>
+        <button type="button" data-format="png" aria-pressed="false">PNG</button>
+        <button type="button" data-format="avif" aria-pressed="false">AVIF</button>
+      </div>
+      <span class="note" id="formatNote"></span>
+    </div>
+
+    <div class="field">
+      <label for="quality" id="qualityLabel" data-i18n="quality_label">Quality</label>
+      <div class="range-row">
+        <input type="range" id="quality" min="0" max="100" value="75" step="1"
+               aria-describedby="qualityHelp">
+        <output id="qualityOut" for="quality">75</output>
+      </div>
+      <span class="note" id="qualityHelp" data-i18n="quality_help">Lower quality = smaller file.</span>
+    </div>
+
+    <div class="field">
+      <span class="label" data-i18n="options_label">Options</span>
+      <label class="check">
+        <input type="checkbox" id="resizeToggle">
+        <span data-i18n="resize_toggle">Resize down to fit</span>
+      </label>
+      <div class="resize-inputs disabled" id="resizeInputs">
+        <select id="resizeUnit" aria-label="Resize unit" style="width:auto">
+          <option value="px" data-i18n="unit_px">Pixels</option>
+          <option value="percent" data-i18n="unit_percent">Percent</option>
+        </select>
+        <span id="pxFields" class="resize-sub">
+          <input type="text" inputmode="numeric" id="maxW" class="numfield" placeholder="W" aria-label="Max width (px)">
+          <span aria-hidden="true">×</span>
+          <input type="text" inputmode="numeric" id="maxH" class="numfield" placeholder="H" aria-label="Max height (px)">
+          <span class="sub" data-i18n="px">px max</span>
+        </span>
+        <span id="pctFields" class="resize-sub" hidden>
+          <input type="text" inputmode="numeric" id="resizePct" class="numfield" placeholder="%" aria-label="Resize percentage">
+          <span class="sub">%</span>
+        </span>
+      </div>
+      <!-- Only shown for formats that can be lossless (png/webp/avif/original). -->
+      <label class="check" id="lossyRow" style="margin-top:6px" hidden>
+        <input type="checkbox" id="lossyToggle">
+        <span id="lossyLabel">Allow lossy optimization</span>
+      </label>
+      <label class="check" style="margin-top:6px">
+        <input type="checkbox" id="stripToggle">
+        <span id="stripLabel">Strip metadata (EXIF, GPS…)</span>
+      </label>
+    </div>
+  </section>
+
+  <!-- ============================ Progress ============================ -->
+  <div class="progress" id="progress" hidden>
+    <div class="progress-bar"><i id="progressFill"></i></div>
+    <span id="progressText" class="progress-text"></span>
+    <button class="btn" id="cancelBtn">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      <span data-i18n="cancel">Cancel</span>
+    </button>
+  </div>
+
+  <!-- ============================ Summary ============================ -->
+  <div class="summary" id="summary" role="status" aria-live="polite">
+    <div class="stat">
+      <span data-i18n="summary_saved">Total saved:</span>
+      <b id="totalSaved">—</b>
+      <span id="totalPct" class="badge">—</span>
+    </div>
+    <div class="actions">
+      <button class="btn primary" id="reprocessBtn" disabled>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/><path d="M3 21v-5h5"/></svg>
+        <span data-i18n="reprocess">Reprocess</span>
+      </button>
+      <button class="btn" id="downloadZip">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0 4-4m-4 4-4-4"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>
+        <span data-i18n="download_zip">Download all (.zip)</span>
+      </button>
+      <button class="btn" id="downloadSeparate">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0 4-4m-4 4-4-4"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/><path d="M9 21h6"/></svg>
+        <span data-i18n="download_separate">Download all (separate)</span>
+      </button>
+      <button class="btn" id="clearAll">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2m2 0v14a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V6"/></svg>
+        <span data-i18n="clear_all">Clear</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- ============================ Item list ============================ -->
+  <div class="items" id="items"></div>
+
+  <!-- ============================ Footer ============================ -->
+  <footer class="credit">
+    <p style="margin:0 0 6px">
+      <button class="btn" id="shareBtn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7"/><path d="M16 6l-4-4-4 4"/><path d="M12 2v13"/></svg>
+        <span data-i18n="share">Share this app</span>
+      </button>
+    </p>
+    <p style="margin:8px 0 0">
+      <span data-i18n="credit_1">Generated and human-reviewed by</span>
+      <a href="https://inventwithpython.com">Al Sweigart</a>.
+      <span data-i18n="credit_2">This app runs entirely in your browser — nothing is uploaded, and you own it forever. Keep it with its codec files to use it offline.</span>
+      <span id="version" style="opacity:.7"></span>
+    </p>
+  </footer>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<!-- ============================================================================
+     The jSquash codecs are NOT embedded here. They live as self-hosted files right
+     beside this page (mit-codecs.min.js + the .wasm binaries) and are loaded lazily —
+     only when the user first optimizes an image, and only the codec for the format
+     actually used. This keeps a page view to ~60 KB.
+     NOTE: because the codecs are separate files, this page must be served over
+     http(s); browsers block Workers/module fetches from file:// URLs.
+============================================================================ -->
+
+<!-- ============================================================================
+     Make It Tiny application code (unminified, commented for developers).
+============================================================================ -->
+<script>
+"use strict";
+(function () {
+  // Single source of truth for the version string (semver).
+  const APP_VERSION = "1.0.0";
+
+  /* ------------------------------------------------------------------ i18n */
+  // Only English is populated for now. Every UI string is keyed here and
+  // stamped onto [data-i18n] nodes so translations can be dropped in later.
+  // Notes for translators/maintainers:
+  //  • app_name ("Make It Tiny"), format names (WebP/JPEG/PNG/AVIF), "Al Sweigart" and the
+  //    URL stay untranslated.
+  //  • Preserve the placeholders exactly: {format}, {i}, {n}, {exif}, {lossy}.
+  //  • {exif}/{lossy} mark where the Wikipedia links are inserted; exif_word/lossy_word are
+  //    the visible link text. Missing keys fall back to English automatically.
+  const translations = {
+    en: {
+      app_name: "Make It Tiny",
+      tagline: "Optimize image file sizes in your web browser. Nothing is uploaded.",
+      drop_title: "Drop images here",
+      drop_sub: "or click to choose files, or paste with",
+      format_label: "Output format",
+      format_original: "Original",
+      format_original_note: "Keeps each image's own format (pasted images become WebP).",
+      quality_label: "Quality",
+      effort_label: "Compression effort",
+      quality_help: "Lower quality = smaller file.",
+      effort_help: "{format} is lossless — higher effort squeezes a little more, more slowly.",
+      options_label: "Options",
+      resize_toggle: "Resize down to fit",
+      unit_px: "Pixels",
+      unit_percent: "Percent",
+      px: "px max",
+      strip_toggle: "Strip metadata ({exif}, GPS…)",
+      exif_word: "EXIF",
+      exif_wiki_url: "https://en.wikipedia.org/wiki/Exif",
+      lossy_toggle: "Allow {lossy} optimization",
+      lossy_word: "lossy",
+      lossy_wiki_url: "https://en.wikipedia.org/wiki/Lossy_compression",
+      reprocess: "Reprocess",
+      cancel: "Cancel",
+      canceled: "Canceled",
+      progress_of: "Optimizing {i} of {n}…",
+      summary_saved: "Total saved:",
+      download_zip: "Download all (.zip)",
+      download_separate: "Download all (separate)",
+      clear_all: "Clear",
+      share: "Share this app",
+      credit_1: "Generated and human-reviewed by",
+      credit_2: "This app runs entirely in your browser — nothing is uploaded, and you own it forever. Keep it with its codec files to use it offline.",
+      download: "Download",
+      remove: "Remove",
+      preparing: "Preparing codec…",
+      optimizing: "Optimizing…",
+      decoding: "Reading…",
+      failed: "Failed",
+      copied: "Copied to clipboard!",
+      share_text: "Make It Tiny — a free, offline image optimizer. Drag, drop, or paste images to shrink their file size with WebP, JPEG, PNG, or AVIF. Everything runs in your browser; nothing is uploaded. Made by Al Sweigart. https://inventwithpython.com",
+    },
+
+    zh: {
+      app_name: "Make It Tiny",
+      tagline: "在浏览器中优化图片文件大小。不会上传任何内容。",
+      drop_title: "将图片拖到此处",
+      drop_sub: "或点击选择文件，或按下粘贴",
+      format_label: "输出格式",
+      format_original: "原格式",
+      format_original_note: "保留每张图片的原有格式（粘贴的图片将转为 WebP）。",
+      quality_label: "质量",
+      effort_label: "压缩强度",
+      quality_help: "质量越低，文件越小。",
+      effort_help: "{format} 是无损格式——强度越高，能再压缩一点点，但速度更慢。",
+      options_label: "选项",
+      resize_toggle: "缩小以适应",
+      unit_px: "像素",
+      unit_percent: "百分比",
+      px: "px 上限",
+      strip_toggle: "去除元数据（{exif}、GPS…）",
+      exif_word: "EXIF",
+      exif_wiki_url: "https://zh.wikipedia.org/wiki/Exif",
+      lossy_toggle: "允许{lossy}优化",
+      lossy_word: "有损",
+      lossy_wiki_url: "https://zh.wikipedia.org/wiki/有损数据压缩",
+      reprocess: "重新处理",
+      cancel: "取消",
+      canceled: "已取消",
+      progress_of: "正在优化第 {i}/{n} 张…",
+      summary_saved: "共节省：",
+      download_zip: "全部下载（.zip）",
+      download_separate: "全部下载（单独文件）",
+      clear_all: "清空",
+      share: "分享此应用",
+      credit_1: "由以下作者生成并经人工审核：",
+      credit_2: "此应用完全在你的浏览器中运行——不会上传任何内容，且永久归你所有。请将它与其编解码器文件一起保存以便离线使用。",
+      download: "下载",
+      remove: "移除",
+      preparing: "正在准备编解码器…",
+      optimizing: "正在优化…",
+      decoding: "正在读取…",
+      failed: "失败",
+      copied: "已复制到剪贴板！",
+      share_text: "Make It Tiny——免费的离线图片优化工具。拖放或粘贴图片，即可用 WebP、JPEG、PNG 或 AVIF 缩小文件大小。全部在浏览器中运行，不会上传任何内容。作者：Al Sweigart。https://inventwithpython.com",
+    },
+
+    es: {
+      app_name: "Make It Tiny",
+      tagline: "Optimiza el tamaño de tus imágenes en el navegador. No se sube nada.",
+      drop_title: "Suelta las imágenes aquí",
+      drop_sub: "o haz clic para elegir archivos, o pega con",
+      format_label: "Formato de salida",
+      format_original: "Original",
+      format_original_note: "Conserva el formato de cada imagen (las imágenes pegadas pasan a WebP).",
+      quality_label: "Calidad",
+      effort_label: "Nivel de compresión",
+      quality_help: "Menor calidad = archivo más pequeño.",
+      effort_help: "{format} es sin pérdida: más esfuerzo comprime un poco más, pero más lento.",
+      options_label: "Opciones",
+      resize_toggle: "Reducir para ajustar",
+      unit_px: "Píxeles",
+      unit_percent: "Porcentaje",
+      px: "px máx.",
+      strip_toggle: "Quitar metadatos ({exif}, GPS…)",
+      exif_word: "EXIF",
+      exif_wiki_url: "https://es.wikipedia.org/wiki/Exif",
+      lossy_toggle: "Permitir optimización {lossy}",
+      lossy_word: "con pérdida",
+      lossy_wiki_url: "https://es.wikipedia.org/wiki/Algoritmo_de_compresi%C3%B3n_con_p%C3%A9rdida",
+      reprocess: "Reprocesar",
+      cancel: "Cancelar",
+      canceled: "Cancelado",
+      progress_of: "Optimizando {i} de {n}…",
+      summary_saved: "Total ahorrado:",
+      download_zip: "Descargar todo (.zip)",
+      download_separate: "Descargar todo (por separado)",
+      clear_all: "Limpiar",
+      share: "Compartir esta app",
+      credit_1: "Generado y revisado por una persona:",
+      credit_2: "Esta app funciona por completo en tu navegador: no se sube nada y es tuya para siempre. Guárdala junto a sus archivos de códec para usarla sin conexión.",
+      download: "Descargar",
+      remove: "Quitar",
+      preparing: "Preparando el códec…",
+      optimizing: "Optimizando…",
+      decoding: "Leyendo…",
+      failed: "Error",
+      copied: "¡Copiado al portapapeles!",
+      share_text: "Make It Tiny: un optimizador de imágenes gratuito y sin conexión. Arrastra, suelta o pega imágenes para reducir su tamaño con WebP, JPEG, PNG o AVIF. Todo se ejecuta en tu navegador; no se sube nada. Creado por Al Sweigart. https://inventwithpython.com",
+    },
+
+    ja: {
+      app_name: "Make It Tiny",
+      tagline: "ブラウザーで画像のファイルサイズを最適化。何もアップロードしません。",
+      drop_title: "ここに画像をドロップ",
+      drop_sub: "またはクリックしてファイルを選択、あるいは貼り付け",
+      format_label: "出力形式",
+      format_original: "元のまま",
+      format_original_note: "各画像の形式をそのまま保持します（貼り付けた画像は WebP になります）。",
+      quality_label: "品質",
+      effort_label: "圧縮の強さ",
+      quality_help: "品質が低いほどファイルは小さくなります。",
+      effort_help: "{format} は可逆圧縮です。強くするとわずかに小さくなりますが、遅くなります。",
+      options_label: "オプション",
+      resize_toggle: "縮小して収める",
+      unit_px: "ピクセル",
+      unit_percent: "パーセント",
+      px: "px 最大",
+      strip_toggle: "メタデータを削除（{exif}、GPS…）",
+      exif_word: "EXIF",
+      exif_wiki_url: "https://ja.wikipedia.org/wiki/Exif",
+      lossy_toggle: "{lossy}最適化を許可",
+      lossy_word: "非可逆",
+      lossy_wiki_url: "https://ja.wikipedia.org/wiki/非可逆圧縮",
+      reprocess: "再処理",
+      cancel: "キャンセル",
+      canceled: "キャンセル済み",
+      progress_of: "{n} 件中 {i} 件を最適化中…",
+      summary_saved: "合計削減:",
+      download_zip: "すべてダウンロード（.zip）",
+      download_separate: "すべてダウンロード（個別）",
+      clear_all: "クリア",
+      share: "このアプリを共有",
+      credit_1: "作成・人手によるレビュー:",
+      credit_2: "このアプリはすべてブラウザー内で動作します。何もアップロードされず、永久にあなたのものです。オフラインで使うにはコーデックファイルと一緒に保存してください。",
+      download: "ダウンロード",
+      remove: "削除",
+      preparing: "コーデックを準備中…",
+      optimizing: "最適化中…",
+      decoding: "読み込み中…",
+      failed: "失敗",
+      copied: "クリップボードにコピーしました！",
+      share_text: "Make It Tiny — 無料・オフラインの画像最適化ツール。画像をドラッグ＆ドロップまたは貼り付けるだけで、WebP・JPEG・PNG・AVIF でファイルサイズを縮小できます。すべてブラウザー内で動作し、何もアップロードされません。作成: Al Sweigart。https://inventwithpython.com",
+    },
+
+    de: {
+      app_name: "Make It Tiny",
+      tagline: "Optimiere Bildgrößen direkt im Browser. Es wird nichts hochgeladen.",
+      drop_title: "Bilder hierher ziehen",
+      drop_sub: "oder klicken, um Dateien zu wählen, oder einfügen mit",
+      format_label: "Ausgabeformat",
+      format_original: "Original",
+      format_original_note: "Behält das Format jedes Bildes bei (eingefügte Bilder werden zu WebP).",
+      quality_label: "Qualität",
+      effort_label: "Kompressionsstufe",
+      quality_help: "Niedrigere Qualität = kleinere Datei.",
+      effort_help: "{format} ist verlustfrei – eine höhere Stufe spart etwas mehr, aber langsamer.",
+      options_label: "Optionen",
+      resize_toggle: "Verkleinern zum Einpassen",
+      unit_px: "Pixel",
+      unit_percent: "Prozent",
+      px: "px max.",
+      strip_toggle: "Metadaten entfernen ({exif}, GPS…)",
+      exif_word: "EXIF",
+      exif_wiki_url: "https://de.wikipedia.org/wiki/Exif",
+      lossy_toggle: "{lossy} Optimierung erlauben",
+      lossy_word: "Verlustbehaftete",
+      lossy_wiki_url: "https://de.wikipedia.org/wiki/Datenkompression",
+      reprocess: "Neu verarbeiten",
+      cancel: "Abbrechen",
+      canceled: "Abgebrochen",
+      progress_of: "Optimiere {i} von {n}…",
+      summary_saved: "Insgesamt gespart:",
+      download_zip: "Alle herunterladen (.zip)",
+      download_separate: "Alle herunterladen (einzeln)",
+      clear_all: "Leeren",
+      share: "App teilen",
+      credit_1: "Erstellt und von Hand geprüft von",
+      credit_2: "Diese App läuft vollständig in deinem Browser – nichts wird hochgeladen und sie gehört für immer dir. Bewahre sie mit ihren Codec-Dateien auf, um sie offline zu nutzen.",
+      download: "Herunterladen",
+      remove: "Entfernen",
+      preparing: "Codec wird vorbereitet…",
+      optimizing: "Wird optimiert…",
+      decoding: "Wird gelesen…",
+      failed: "Fehlgeschlagen",
+      copied: "In die Zwischenablage kopiert!",
+      share_text: "Make It Tiny – ein kostenloser, offline nutzbarer Bildoptimierer. Bilder ziehen, ablegen oder einfügen und mit WebP, JPEG, PNG oder AVIF verkleinern. Alles läuft im Browser; nichts wird hochgeladen. Von Al Sweigart. https://inventwithpython.com",
+    },
+
+    pt: {
+      app_name: "Make It Tiny",
+      tagline: "Otimize o tamanho das imagens no seu navegador. Nada é enviado.",
+      drop_title: "Largue as imagens aqui",
+      drop_sub: "ou clique para escolher ficheiros, ou cole com",
+      format_label: "Formato de saída",
+      format_original: "Original",
+      format_original_note: "Mantém o formato de cada imagem (imagens coladas passam a WebP).",
+      quality_label: "Qualidade",
+      effort_label: "Nível de compressão",
+      quality_help: "Menor qualidade = ficheiro mais pequeno.",
+      effort_help: "{format} é sem perdas — mais esforço comprime um pouco mais, mas mais devagar.",
+      options_label: "Opções",
+      resize_toggle: "Reduzir para caber",
+      unit_px: "Píxeis",
+      unit_percent: "Percentagem",
+      px: "px máx.",
+      strip_toggle: "Remover metadados ({exif}, GPS…)",
+      exif_word: "EXIF",
+      exif_wiki_url: "https://pt.wikipedia.org/wiki/Exif",
+      lossy_toggle: "Permitir otimização {lossy}",
+      lossy_word: "com perdas",
+      lossy_wiki_url: "https://pt.wikipedia.org/wiki/Compress%C3%A3o_com_perdas",
+      reprocess: "Reprocessar",
+      cancel: "Cancelar",
+      canceled: "Cancelado",
+      progress_of: "A otimizar {i} de {n}…",
+      summary_saved: "Total poupado:",
+      download_zip: "Descarregar tudo (.zip)",
+      download_separate: "Descarregar tudo (em separado)",
+      clear_all: "Limpar",
+      share: "Partilhar esta app",
+      credit_1: "Gerado e revisto por uma pessoa:",
+      credit_2: "Esta app corre inteiramente no seu navegador — nada é enviado e é sua para sempre. Guarde-a junto aos seus ficheiros de codec para a usar offline.",
+      download: "Descarregar",
+      remove: "Remover",
+      preparing: "A preparar o codec…",
+      optimizing: "A otimizar…",
+      decoding: "A ler…",
+      failed: "Falhou",
+      copied: "Copiado para a área de transferência!",
+      share_text: "Make It Tiny — um otimizador de imagens gratuito e offline. Arraste, largue ou cole imagens para reduzir o seu tamanho com WebP, JPEG, PNG ou AVIF. Tudo corre no navegador; nada é enviado. Feito por Al Sweigart. https://inventwithpython.com",
+    },
+
+    "pt-BR": {
+      app_name: "Make It Tiny",
+      tagline: "Otimize o tamanho das imagens no seu navegador. Nada é enviado.",
+      drop_title: "Solte as imagens aqui",
+      drop_sub: "ou clique para escolher arquivos, ou cole com",
+      format_label: "Formato de saída",
+      format_original: "Original",
+      format_original_note: "Mantém o formato de cada imagem (imagens coladas viram WebP).",
+      quality_label: "Qualidade",
+      effort_label: "Nível de compressão",
+      quality_help: "Menor qualidade = arquivo menor.",
+      effort_help: "{format} é sem perdas — mais esforço comprime um pouco mais, porém mais devagar.",
+      options_label: "Opções",
+      resize_toggle: "Reduzir para caber",
+      unit_px: "Pixels",
+      unit_percent: "Porcentagem",
+      px: "px máx.",
+      strip_toggle: "Remover metadados ({exif}, GPS…)",
+      exif_word: "EXIF",
+      exif_wiki_url: "https://pt.wikipedia.org/wiki/Exif",
+      lossy_toggle: "Permitir otimização {lossy}",
+      lossy_word: "com perdas",
+      lossy_wiki_url: "https://pt.wikipedia.org/wiki/Compress%C3%A3o_com_perdas",
+      reprocess: "Reprocessar",
+      cancel: "Cancelar",
+      canceled: "Cancelado",
+      progress_of: "Otimizando {i} de {n}…",
+      summary_saved: "Total economizado:",
+      download_zip: "Baixar tudo (.zip)",
+      download_separate: "Baixar tudo (separado)",
+      clear_all: "Limpar",
+      share: "Compartilhar este app",
+      credit_1: "Gerado e revisado por uma pessoa:",
+      credit_2: "Este app roda inteiramente no seu navegador — nada é enviado e é seu para sempre. Guarde-o junto aos seus arquivos de codec para usá-lo offline.",
+      download: "Baixar",
+      remove: "Remover",
+      preparing: "Preparando o codec…",
+      optimizing: "Otimizando…",
+      decoding: "Lendo…",
+      failed: "Falhou",
+      copied: "Copiado para a área de transferência!",
+      share_text: "Make It Tiny — um otimizador de imagens gratuito e offline. Arraste, solte ou cole imagens para reduzir o tamanho com WebP, JPEG, PNG ou AVIF. Tudo roda no navegador; nada é enviado. Feito por Al Sweigart. https://inventwithpython.com",
+    },
+
+    fr: {
+      app_name: "Make It Tiny",
+      tagline: "Optimisez la taille de vos images dans le navigateur. Rien n'est envoyé.",
+      drop_title: "Déposez les images ici",
+      drop_sub: "ou cliquez pour choisir des fichiers, ou collez avec",
+      format_label: "Format de sortie",
+      format_original: "Original",
+      format_original_note: "Conserve le format de chaque image (les images collées deviennent du WebP).",
+      quality_label: "Qualité",
+      effort_label: "Niveau de compression",
+      quality_help: "Qualité plus basse = fichier plus petit.",
+      effort_help: "{format} est sans perte : un niveau plus élevé gagne un peu plus, mais plus lentement.",
+      options_label: "Options",
+      resize_toggle: "Réduire pour adapter",
+      unit_px: "Pixels",
+      unit_percent: "Pourcentage",
+      px: "px max",
+      strip_toggle: "Supprimer les métadonnées ({exif}, GPS…)",
+      exif_word: "EXIF",
+      exif_wiki_url: "https://fr.wikipedia.org/wiki/Exif",
+      lossy_toggle: "Autoriser l'optimisation {lossy}",
+      lossy_word: "avec perte",
+      lossy_wiki_url: "https://fr.wikipedia.org/wiki/Compression_de_donn%C3%A9es_avec_pertes",
+      reprocess: "Retraiter",
+      cancel: "Annuler",
+      canceled: "Annulé",
+      progress_of: "Optimisation de {i} sur {n}…",
+      summary_saved: "Total économisé :",
+      download_zip: "Tout télécharger (.zip)",
+      download_separate: "Tout télécharger (séparément)",
+      clear_all: "Effacer",
+      share: "Partager cette appli",
+      credit_1: "Généré et vérifié par un humain :",
+      credit_2: "Cette appli fonctionne entièrement dans votre navigateur : rien n'est envoyé et elle est à vous pour toujours. Conservez-la avec ses fichiers de codec pour l'utiliser hors ligne.",
+      download: "Télécharger",
+      remove: "Retirer",
+      preparing: "Préparation du codec…",
+      optimizing: "Optimisation…",
+      decoding: "Lecture…",
+      failed: "Échec",
+      copied: "Copié dans le presse-papiers !",
+      share_text: "Make It Tiny — un optimiseur d'images gratuit et hors ligne. Glissez, déposez ou collez des images pour réduire leur taille avec WebP, JPEG, PNG ou AVIF. Tout s'exécute dans votre navigateur ; rien n'est envoyé. Par Al Sweigart. https://inventwithpython.com",
+    },
+
+    ru: {
+      app_name: "Make It Tiny",
+      tagline: "Оптимизируйте размер изображений прямо в браузере. Ничего не загружается на сервер.",
+      drop_title: "Перетащите изображения сюда",
+      drop_sub: "или нажмите, чтобы выбрать файлы, либо вставьте с помощью",
+      format_label: "Формат вывода",
+      format_original: "Исходный",
+      format_original_note: "Сохраняет формат каждого изображения (вставленные становятся WebP).",
+      quality_label: "Качество",
+      effort_label: "Уровень сжатия",
+      quality_help: "Ниже качество — меньше файл.",
+      effort_help: "{format} — без потерь: выше уровень немного уменьшит размер, но медленнее.",
+      options_label: "Параметры",
+      resize_toggle: "Уменьшить по размеру",
+      unit_px: "Пиксели",
+      unit_percent: "Проценты",
+      px: "px макс.",
+      strip_toggle: "Удалить метаданные ({exif}, GPS…)",
+      exif_word: "EXIF",
+      exif_wiki_url: "https://ru.wikipedia.org/wiki/Exif",
+      lossy_toggle: "Разрешить сжатие {lossy}",
+      lossy_word: "с потерями",
+      lossy_wiki_url: "https://ru.wikipedia.org/wiki/%D0%A1%D0%B6%D0%B0%D1%82%D0%B8%D0%B5_%D0%B4%D0%B0%D0%BD%D0%BD%D1%8B%D1%85_%D1%81_%D0%BF%D0%BE%D1%82%D0%B5%D1%80%D1%8F%D0%BC%D0%B8",
+      reprocess: "Обработать заново",
+      cancel: "Отмена",
+      canceled: "Отменено",
+      progress_of: "Оптимизация {i} из {n}…",
+      summary_saved: "Всего сэкономлено:",
+      download_zip: "Скачать всё (.zip)",
+      download_separate: "Скачать всё (по отдельности)",
+      clear_all: "Очистить",
+      share: "Поделиться приложением",
+      credit_1: "Создано и проверено человеком:",
+      credit_2: "Это приложение работает полностью в вашем браузере — ничего не загружается, и оно навсегда ваше. Храните его вместе с файлами кодеков, чтобы использовать офлайн.",
+      download: "Скачать",
+      remove: "Удалить",
+      preparing: "Подготовка кодека…",
+      optimizing: "Оптимизация…",
+      decoding: "Чтение…",
+      failed: "Ошибка",
+      copied: "Скопировано в буфер обмена!",
+      share_text: "Make It Tiny — бесплатный офлайн-оптимизатор изображений. Перетащите, отпустите или вставьте изображения, чтобы уменьшить их размер с помощью WebP, JPEG, PNG или AVIF. Всё работает в браузере, ничего не загружается. Автор: Al Sweigart. https://inventwithpython.com",
+    },
+
+    ko: {
+      app_name: "Make It Tiny",
+      tagline: "브라우저에서 이미지 파일 크기를 최적화하세요. 아무것도 업로드되지 않습니다.",
+      drop_title: "여기에 이미지를 놓으세요",
+      drop_sub: "또는 클릭하여 파일 선택, 아니면 붙여넣기",
+      format_label: "출력 형식",
+      format_original: "원본",
+      format_original_note: "각 이미지의 원래 형식을 유지합니다(붙여넣은 이미지는 WebP가 됩니다).",
+      quality_label: "품질",
+      effort_label: "압축 강도",
+      quality_help: "품질이 낮을수록 파일이 작아집니다.",
+      effort_help: "{format}은(는) 무손실입니다. 강도를 높이면 조금 더 줄지만 더 느려집니다.",
+      options_label: "옵션",
+      resize_toggle: "맞게 축소",
+      unit_px: "픽셀",
+      unit_percent: "퍼센트",
+      px: "px 최대",
+      strip_toggle: "메타데이터 제거({exif}, GPS…)",
+      exif_word: "EXIF",
+      exif_wiki_url: "https://ko.wikipedia.org/wiki/Exif",
+      lossy_toggle: "{lossy} 최적화 허용",
+      lossy_word: "손실",
+      lossy_wiki_url: "https://ko.wikipedia.org/wiki/%EC%86%90%EC%8B%A4_%EC%95%95%EC%B6%95",
+      reprocess: "다시 처리",
+      cancel: "취소",
+      canceled: "취소됨",
+      progress_of: "{n}개 중 {i}개 최적화 중…",
+      summary_saved: "총 절약:",
+      download_zip: "모두 다운로드(.zip)",
+      download_separate: "모두 다운로드(개별)",
+      clear_all: "지우기",
+      share: "앱 공유",
+      credit_1: "생성 및 사람 검수:",
+      credit_2: "이 앱은 전적으로 브라우저에서 실행됩니다. 아무것도 업로드되지 않으며 영원히 당신의 것입니다. 오프라인으로 쓰려면 코덱 파일과 함께 보관하세요.",
+      download: "다운로드",
+      remove: "제거",
+      preparing: "코덱 준비 중…",
+      optimizing: "최적화 중…",
+      decoding: "읽는 중…",
+      failed: "실패",
+      copied: "클립보드에 복사했습니다!",
+      share_text: "Make It Tiny — 무료 오프라인 이미지 최적화 도구. 이미지를 끌어다 놓거나 붙여넣어 WebP, JPEG, PNG, AVIF로 파일 크기를 줄이세요. 모두 브라우저에서 실행되며 아무것도 업로드되지 않습니다. 제작: Al Sweigart. https://inventwithpython.com",
+    },
+
+    id: {
+      app_name: "Make It Tiny",
+      tagline: "Optimalkan ukuran berkas gambar di peramban Anda. Tidak ada yang diunggah.",
+      drop_title: "Jatuhkan gambar di sini",
+      drop_sub: "atau klik untuk memilih berkas, atau tempel dengan",
+      format_label: "Format keluaran",
+      format_original: "Asli",
+      format_original_note: "Mempertahankan format asli tiap gambar (gambar yang ditempel menjadi WebP).",
+      quality_label: "Kualitas",
+      effort_label: "Tingkat kompresi",
+      quality_help: "Kualitas lebih rendah = berkas lebih kecil.",
+      effort_help: "{format} bersifat lossless — upaya lebih tinggi memperkecil sedikit lagi, tetapi lebih lambat.",
+      options_label: "Opsi",
+      resize_toggle: "Perkecil agar pas",
+      unit_px: "Piksel",
+      unit_percent: "Persen",
+      px: "px maks",
+      strip_toggle: "Hapus metadata ({exif}, GPS…)",
+      exif_word: "EXIF",
+      exif_wiki_url: "https://id.wikipedia.org/wiki/Exif",
+      lossy_toggle: "Izinkan optimasi {lossy}",
+      lossy_word: "lossy",
+      reprocess: "Proses ulang",
+      cancel: "Batal",
+      canceled: "Dibatalkan",
+      progress_of: "Mengoptimalkan {i} dari {n}…",
+      summary_saved: "Total dihemat:",
+      download_zip: "Unduh semua (.zip)",
+      download_separate: "Unduh semua (terpisah)",
+      clear_all: "Bersihkan",
+      share: "Bagikan aplikasi ini",
+      credit_1: "Dibuat dan ditinjau oleh manusia oleh",
+      credit_2: "Aplikasi ini berjalan sepenuhnya di peramban Anda — tidak ada yang diunggah, dan menjadi milik Anda selamanya. Simpan bersama berkas codec-nya untuk memakainya secara luring.",
+      download: "Unduh",
+      remove: "Hapus",
+      preparing: "Menyiapkan codec…",
+      optimizing: "Mengoptimalkan…",
+      decoding: "Membaca…",
+      failed: "Gagal",
+      copied: "Disalin ke papan klip!",
+      share_text: "Make It Tiny — pengoptimal gambar gratis yang bekerja luring. Seret, jatuhkan, atau tempel gambar untuk memperkecil ukurannya dengan WebP, JPEG, PNG, atau AVIF. Semua berjalan di peramban; tidak ada yang diunggah. Dibuat oleh Al Sweigart. https://inventwithpython.com",
+    },
+
+    it: {
+      app_name: "Make It Tiny",
+      tagline: "Ottimizza le dimensioni delle immagini nel browser. Non viene caricato nulla.",
+      drop_title: "Trascina qui le immagini",
+      drop_sub: "oppure clicca per scegliere i file, o incolla con",
+      format_label: "Formato di output",
+      format_original: "Originale",
+      format_original_note: "Mantiene il formato di ogni immagine (le immagini incollate diventano WebP).",
+      quality_label: "Qualità",
+      effort_label: "Livello di compressione",
+      quality_help: "Qualità più bassa = file più piccolo.",
+      effort_help: "{format} è senza perdita: un livello più alto comprime un po' di più, ma più lentamente.",
+      options_label: "Opzioni",
+      resize_toggle: "Riduci per adattare",
+      unit_px: "Pixel",
+      unit_percent: "Percentuale",
+      px: "px max",
+      strip_toggle: "Rimuovi metadati ({exif}, GPS…)",
+      exif_word: "EXIF",
+      exif_wiki_url: "https://it.wikipedia.org/wiki/Exif",
+      lossy_toggle: "Consenti ottimizzazione {lossy}",
+      lossy_word: "con perdita",
+      lossy_wiki_url: "https://it.wikipedia.org/wiki/Compressione_dati_lossy",
+      reprocess: "Rielabora",
+      cancel: "Annulla",
+      canceled: "Annullato",
+      progress_of: "Ottimizzazione {i} di {n}…",
+      summary_saved: "Totale risparmiato:",
+      download_zip: "Scarica tutto (.zip)",
+      download_separate: "Scarica tutto (separati)",
+      clear_all: "Svuota",
+      share: "Condividi questa app",
+      credit_1: "Generato e revisionato da una persona:",
+      credit_2: "Questa app funziona interamente nel tuo browser: non viene caricato nulla ed è tua per sempre. Conservala insieme ai suoi file di codec per usarla offline.",
+      download: "Scarica",
+      remove: "Rimuovi",
+      preparing: "Preparazione del codec…",
+      optimizing: "Ottimizzazione…",
+      decoding: "Lettura…",
+      failed: "Non riuscito",
+      copied: "Copiato negli appunti!",
+      share_text: "Make It Tiny — un ottimizzatore di immagini gratuito e offline. Trascina, rilascia o incolla immagini per ridurne le dimensioni con WebP, JPEG, PNG o AVIF. Tutto funziona nel browser; non viene caricato nulla. Creato da Al Sweigart. https://inventwithpython.com",
+    },
+
+    pl: {
+      app_name: "Make It Tiny",
+      tagline: "Optymalizuj rozmiar obrazów w przeglądarce. Nic nie jest wysyłane.",
+      drop_title: "Upuść obrazy tutaj",
+      drop_sub: "albo kliknij, aby wybrać pliki, lub wklej za pomocą",
+      format_label: "Format wyjściowy",
+      format_original: "Oryginalny",
+      format_original_note: "Zachowuje format każdego obrazu (wklejone obrazy stają się WebP).",
+      quality_label: "Jakość",
+      effort_label: "Poziom kompresji",
+      quality_help: "Niższa jakość = mniejszy plik.",
+      effort_help: "{format} jest bezstratny — wyższy poziom zmniejsza nieco bardziej, ale wolniej.",
+      options_label: "Opcje",
+      resize_toggle: "Zmniejsz, aby dopasować",
+      unit_px: "Piksele",
+      unit_percent: "Procent",
+      px: "px maks.",
+      strip_toggle: "Usuń metadane ({exif}, GPS…)",
+      exif_word: "EXIF",
+      exif_wiki_url: "https://pl.wikipedia.org/wiki/Exif",
+      lossy_toggle: "Zezwól na optymalizację {lossy}",
+      lossy_word: "stratną",
+      lossy_wiki_url: "https://pl.wikipedia.org/wiki/Kompresja_stratna",
+      reprocess: "Przetwórz ponownie",
+      cancel: "Anuluj",
+      canceled: "Anulowano",
+      progress_of: "Optymalizacja {i} z {n}…",
+      summary_saved: "Łącznie zaoszczędzono:",
+      download_zip: "Pobierz wszystko (.zip)",
+      download_separate: "Pobierz wszystko (osobno)",
+      clear_all: "Wyczyść",
+      share: "Udostępnij tę aplikację",
+      credit_1: "Wygenerowane i sprawdzone przez człowieka:",
+      credit_2: "Ta aplikacja działa w całości w Twojej przeglądarce — nic nie jest wysyłane i należy do Ciebie na zawsze. Trzymaj ją razem z plikami kodeków, aby używać jej offline.",
+      download: "Pobierz",
+      remove: "Usuń",
+      preparing: "Przygotowywanie kodeka…",
+      optimizing: "Optymalizowanie…",
+      decoding: "Odczyt…",
+      failed: "Niepowodzenie",
+      copied: "Skopiowano do schowka!",
+      share_text: "Make It Tiny — darmowy, działający offline optymalizator obrazów. Przeciągnij, upuść lub wklej obrazy, aby zmniejszyć ich rozmiar za pomocą WebP, JPEG, PNG lub AVIF. Wszystko działa w przeglądarce; nic nie jest wysyłane. Autor: Al Sweigart. https://inventwithpython.com",
+    },
+
+    tr: {
+      app_name: "Make It Tiny",
+      tagline: "Görsel dosya boyutlarını tarayıcınızda optimize edin. Hiçbir şey yüklenmez.",
+      drop_title: "Görselleri buraya bırakın",
+      drop_sub: "ya da dosya seçmek için tıklayın veya yapıştırın",
+      format_label: "Çıktı biçimi",
+      format_original: "Özgün",
+      format_original_note: "Her görselin kendi biçimini korur (yapıştırılan görseller WebP olur).",
+      quality_label: "Kalite",
+      effort_label: "Sıkıştırma düzeyi",
+      quality_help: "Daha düşük kalite = daha küçük dosya.",
+      effort_help: "{format} kayıpsızdır — daha yüksek düzey biraz daha küçültür ama daha yavaştır.",
+      options_label: "Seçenekler",
+      resize_toggle: "Sığdırmak için küçült",
+      unit_px: "Piksel",
+      unit_percent: "Yüzde",
+      px: "px en fazla",
+      strip_toggle: "Meta verileri kaldır ({exif}, GPS…)",
+      exif_word: "EXIF",
+      exif_wiki_url: "https://tr.wikipedia.org/wiki/Exif",
+      lossy_toggle: "{lossy} optimizasyona izin ver",
+      lossy_word: "kayıplı",
+      lossy_wiki_url: "https://tr.wikipedia.org/wiki/Kay%C4%B1pl%C4%B1_s%C4%B1k%C4%B1%C5%9Ft%C4%B1rma",
+      reprocess: "Yeniden işle",
+      cancel: "İptal",
+      canceled: "İptal edildi",
+      progress_of: "{n} görselden {i}. optimize ediliyor…",
+      summary_saved: "Toplam kazanç:",
+      download_zip: "Tümünü indir (.zip)",
+      download_separate: "Tümünü indir (ayrı ayrı)",
+      clear_all: "Temizle",
+      share: "Bu uygulamayı paylaş",
+      credit_1: "Oluşturan ve insan tarafından incelenen:",
+      credit_2: "Bu uygulama tamamen tarayıcınızda çalışır — hiçbir şey yüklenmez ve sonsuza dek sizindir. Çevrimdışı kullanmak için codec dosyalarıyla birlikte saklayın.",
+      download: "İndir",
+      remove: "Kaldır",
+      preparing: "Codec hazırlanıyor…",
+      optimizing: "Optimize ediliyor…",
+      decoding: "Okunuyor…",
+      failed: "Başarısız",
+      copied: "Panoya kopyalandı!",
+      share_text: "Make It Tiny — ücretsiz, çevrimdışı bir görsel optimize aracı. Görselleri sürükleyip bırakın veya yapıştırın; WebP, JPEG, PNG ya da AVIF ile boyutlarını küçültün. Her şey tarayıcınızda çalışır; hiçbir şey yüklenmez. Al Sweigart tarafından. https://inventwithpython.com",
+    },
+
+    vi: {
+      app_name: "Make It Tiny",
+      tagline: "Tối ưu kích thước ảnh ngay trong trình duyệt. Không tải gì lên máy chủ.",
+      drop_title: "Thả ảnh vào đây",
+      drop_sub: "hoặc nhấp để chọn tệp, hoặc dán bằng",
+      format_label: "Định dạng đầu ra",
+      format_original: "Nguyên gốc",
+      format_original_note: "Giữ nguyên định dạng của mỗi ảnh (ảnh dán vào sẽ thành WebP).",
+      quality_label: "Chất lượng",
+      effort_label: "Mức nén",
+      quality_help: "Chất lượng thấp hơn = tệp nhỏ hơn.",
+      effort_help: "{format} là không mất dữ liệu — mức cao hơn giảm thêm một chút nhưng chậm hơn.",
+      options_label: "Tùy chọn",
+      resize_toggle: "Thu nhỏ cho vừa",
+      unit_px: "Điểm ảnh",
+      unit_percent: "Phần trăm",
+      px: "px tối đa",
+      strip_toggle: "Xóa siêu dữ liệu ({exif}, GPS…)",
+      exif_word: "EXIF",
+      exif_wiki_url: "https://vi.wikipedia.org/wiki/Exif",
+      lossy_toggle: "Cho phép tối ưu {lossy}",
+      lossy_word: "mất dữ liệu",
+      reprocess: "Xử lý lại",
+      cancel: "Hủy",
+      canceled: "Đã hủy",
+      progress_of: "Đang tối ưu {i}/{n}…",
+      summary_saved: "Tổng tiết kiệm:",
+      download_zip: "Tải tất cả (.zip)",
+      download_separate: "Tải tất cả (riêng lẻ)",
+      clear_all: "Xóa hết",
+      share: "Chia sẻ ứng dụng",
+      credit_1: "Được tạo và kiểm duyệt bởi con người:",
+      credit_2: "Ứng dụng này chạy hoàn toàn trong trình duyệt của bạn — không tải gì lên và thuộc về bạn mãi mãi. Hãy giữ nó cùng các tệp codec để dùng ngoại tuyến.",
+      download: "Tải xuống",
+      remove: "Gỡ",
+      preparing: "Đang chuẩn bị codec…",
+      optimizing: "Đang tối ưu…",
+      decoding: "Đang đọc…",
+      failed: "Thất bại",
+      copied: "Đã sao chép vào bảng nhớ tạm!",
+      share_text: "Make It Tiny — công cụ tối ưu ảnh miễn phí, chạy ngoại tuyến. Kéo, thả hoặc dán ảnh để giảm kích thước bằng WebP, JPEG, PNG hoặc AVIF. Mọi thứ chạy trong trình duyệt; không tải gì lên. Bởi Al Sweigart. https://inventwithpython.com",
+    },
+
+    ar: {
+      app_name: "Make It Tiny",
+      tagline: "حسِّن أحجام ملفات الصور داخل متصفحك. لا يتم رفع أي شيء.",
+      drop_title: "أفلِت الصور هنا",
+      drop_sub: "أو انقر لاختيار الملفات، أو الصق باستخدام",
+      format_label: "صيغة الإخراج",
+      format_original: "الأصلية",
+      format_original_note: "يحتفظ بصيغة كل صورة (الصور الملصقة تتحول إلى WebP).",
+      quality_label: "الجودة",
+      effort_label: "مستوى الضغط",
+      quality_help: "جودة أقل = ملف أصغر.",
+      effort_help: "{format} بدون فقدان — المستوى الأعلى يوفّر قليلاً أكثر لكن أبطأ.",
+      options_label: "الخيارات",
+      resize_toggle: "تصغير ليلائم",
+      unit_px: "بكسل",
+      unit_percent: "نسبة مئوية",
+      px: "بكسل كحد أقصى",
+      strip_toggle: "إزالة البيانات الوصفية ({exif}، GPS…)",
+      exif_word: "EXIF",
+      exif_wiki_url: "https://ar.wikipedia.org/wiki/Exif",
+      lossy_toggle: "السماح بالتحسين {lossy}",
+      lossy_word: "مع فقدان",
+      reprocess: "إعادة المعالجة",
+      cancel: "إلغاء",
+      canceled: "أُلغي",
+      progress_of: "جارٍ تحسين {i} من {n}…",
+      summary_saved: "إجمالي التوفير:",
+      download_zip: "تنزيل الكل (.zip)",
+      download_separate: "تنزيل الكل (منفصلة)",
+      clear_all: "مسح",
+      share: "شارك هذا التطبيق",
+      credit_1: "أُنشئ وروجع بشريًا بواسطة",
+      credit_2: "يعمل هذا التطبيق بالكامل داخل متصفحك — لا يُرفع أي شيء وهو ملكك إلى الأبد. احتفظ به مع ملفات الترميز الخاصة به لاستخدامه دون اتصال.",
+      download: "تنزيل",
+      remove: "إزالة",
+      preparing: "جارٍ تجهيز المُرمِّز…",
+      optimizing: "جارٍ التحسين…",
+      decoding: "جارٍ القراءة…",
+      failed: "فشل",
+      copied: "نُسخ إلى الحافظة!",
+      share_text: "Make It Tiny — أداة مجانية لتحسين الصور تعمل دون اتصال. اسحب الصور أو ألصقها لتصغير حجمها باستخدام WebP أو JPEG أو PNG أو AVIF. كل شيء يعمل في متصفحك؛ لا يُرفع أي شيء. من إعداد Al Sweigart. https://inventwithpython.com",
+    },
+
+    nl: {
+      app_name: "Make It Tiny",
+      tagline: "Optimaliseer de bestandsgrootte van afbeeldingen in je browser. Er wordt niets geüpload.",
+      drop_title: "Sleep afbeeldingen hierheen",
+      drop_sub: "of klik om bestanden te kiezen, of plak met",
+      format_label: "Uitvoerformaat",
+      format_original: "Origineel",
+      format_original_note: "Behoudt het formaat van elke afbeelding (geplakte afbeeldingen worden WebP).",
+      quality_label: "Kwaliteit",
+      effort_label: "Compressieniveau",
+      quality_help: "Lagere kwaliteit = kleiner bestand.",
+      effort_help: "{format} is lossless — een hoger niveau bespaart iets meer, maar langzamer.",
+      options_label: "Opties",
+      resize_toggle: "Verkleinen om te passen",
+      unit_px: "Pixels",
+      unit_percent: "Procent",
+      px: "px max",
+      strip_toggle: "Metadata verwijderen ({exif}, GPS…)",
+      exif_word: "EXIF",
+      exif_wiki_url: "https://nl.wikipedia.org/wiki/Exif",
+      lossy_toggle: "{lossy} optimalisatie toestaan",
+      lossy_word: "lossy",
+      lossy_wiki_url: "https://nl.wikipedia.org/wiki/Lossy",
+      reprocess: "Opnieuw verwerken",
+      cancel: "Annuleren",
+      canceled: "Geannuleerd",
+      progress_of: "Bezig met optimaliseren {i} van {n}…",
+      summary_saved: "Totaal bespaard:",
+      download_zip: "Alles downloaden (.zip)",
+      download_separate: "Alles downloaden (apart)",
+      clear_all: "Wissen",
+      share: "Deel deze app",
+      credit_1: "Gegenereerd en door een mens gecontroleerd door",
+      credit_2: "Deze app draait volledig in je browser — er wordt niets geüpload en hij is voor altijd van jou. Bewaar hem met zijn codecbestanden om hem offline te gebruiken.",
+      download: "Downloaden",
+      remove: "Verwijderen",
+      preparing: "Codec voorbereiden…",
+      optimizing: "Bezig met optimaliseren…",
+      decoding: "Bezig met lezen…",
+      failed: "Mislukt",
+      copied: "Gekopieerd naar klembord!",
+      share_text: "Make It Tiny — een gratis, offline beeldoptimalisator. Sleep, zet neer of plak afbeeldingen om ze kleiner te maken met WebP, JPEG, PNG of AVIF. Alles draait in je browser; er wordt niets geüpload. Gemaakt door Al Sweigart. https://inventwithpython.com",
+    },
+
+    hi: {
+      app_name: "Make It Tiny",
+      tagline: "अपने ब्राउज़र में ही इमेज फ़ाइल का आकार अनुकूलित करें। कुछ भी अपलोड नहीं होता।",
+      drop_title: "यहाँ इमेज छोड़ें",
+      drop_sub: "या फ़ाइलें चुनने के लिए क्लिक करें, या पेस्ट करें",
+      format_label: "आउटपुट प्रारूप",
+      format_original: "मूल",
+      format_original_note: "हर इमेज का अपना प्रारूप बनाए रखता है (पेस्ट की गई इमेज WebP बन जाती हैं)।",
+      quality_label: "गुणवत्ता",
+      effort_label: "संपीड़न स्तर",
+      quality_help: "कम गुणवत्ता = छोटी फ़ाइल।",
+      effort_help: "{format} बिना हानि वाला है — अधिक स्तर थोड़ा और घटाता है, पर धीमे।",
+      options_label: "विकल्प",
+      resize_toggle: "फ़िट करने के लिए छोटा करें",
+      unit_px: "पिक्सेल",
+      unit_percent: "प्रतिशत",
+      px: "px अधिकतम",
+      strip_toggle: "मेटाडेटा हटाएँ ({exif}, GPS…)",
+      exif_word: "EXIF",
+      exif_wiki_url: "https://hi.wikipedia.org/wiki/Exif",
+      lossy_toggle: "{lossy} अनुकूलन की अनुमति दें",
+      lossy_word: "हानिपूर्ण",
+      reprocess: "फिर से संसाधित करें",
+      cancel: "रद्द करें",
+      canceled: "रद्द किया गया",
+      progress_of: "{n} में से {i} को अनुकूलित किया जा रहा है…",
+      summary_saved: "कुल बचत:",
+      download_zip: "सभी डाउनलोड करें (.zip)",
+      download_separate: "सभी डाउनलोड करें (अलग-अलग)",
+      clear_all: "साफ़ करें",
+      share: "यह ऐप साझा करें",
+      credit_1: "निर्मित और मानव द्वारा समीक्षित:",
+      credit_2: "यह ऐप पूरी तरह आपके ब्राउज़र में चलता है — कुछ भी अपलोड नहीं होता और यह हमेशा के लिए आपका है। ऑफ़लाइन उपयोग के लिए इसे इसकी कोडेक फ़ाइलों के साथ रखें।",
+      download: "डाउनलोड",
+      remove: "हटाएँ",
+      preparing: "कोडेक तैयार किया जा रहा है…",
+      optimizing: "अनुकूलित किया जा रहा है…",
+      decoding: "पढ़ा जा रहा है…",
+      failed: "विफल",
+      copied: "क्लिपबोर्ड पर कॉपी किया गया!",
+      share_text: "Make It Tiny — एक मुफ़्त, ऑफ़लाइन इमेज ऑप्टिमाइज़र। इमेज खींचें-छोड़ें या पेस्ट करें और WebP, JPEG, PNG या AVIF से उनका आकार घटाएँ। सब कुछ आपके ब्राउज़र में चलता है; कुछ भी अपलोड नहीं होता। निर्माता: Al Sweigart। https://inventwithpython.com",
+    },
+
+    fa: {
+      app_name: "Make It Tiny",
+      tagline: "حجم فایل تصاویر را در مرورگر خود بهینه کنید. چیزی بارگذاری نمی‌شود.",
+      drop_title: "تصاویر را اینجا رها کنید",
+      drop_sub: "یا برای انتخاب فایل کلیک کنید، یا بچسبانید با",
+      format_label: "قالب خروجی",
+      format_original: "اصلی",
+      format_original_note: "قالب هر تصویر را حفظ می‌کند (تصاویر چسبانده‌شده به WebP تبدیل می‌شوند).",
+      quality_label: "کیفیت",
+      effort_label: "سطح فشرده‌سازی",
+      quality_help: "کیفیت کمتر = فایل کوچک‌تر.",
+      effort_help: "{format} بدون اتلاف است — سطح بالاتر کمی بیشتر کم می‌کند اما کندتر.",
+      options_label: "گزینه‌ها",
+      resize_toggle: "کوچک کردن برای جا شدن",
+      unit_px: "پیکسل",
+      unit_percent: "درصد",
+      px: "px حداکثر",
+      strip_toggle: "حذف فراداده ({exif}، GPS…)",
+      exif_word: "EXIF",
+      exif_wiki_url: "https://fa.wikipedia.org/wiki/Exif",
+      lossy_toggle: "اجازهٔ بهینه‌سازی {lossy}",
+      lossy_word: "با اتلاف",
+      reprocess: "پردازش دوباره",
+      cancel: "لغو",
+      canceled: "لغو شد",
+      progress_of: "در حال بهینه‌سازی {i} از {n}…",
+      summary_saved: "کل صرفه‌جویی:",
+      download_zip: "دانلود همه (.zip)",
+      download_separate: "دانلود همه (جداگانه)",
+      clear_all: "پاک کردن",
+      share: "هم‌رسانی این برنامه",
+      credit_1: "ساخته و بازبینی‌شده توسط انسان:",
+      credit_2: "این برنامه کاملاً در مرورگر شما اجرا می‌شود — چیزی بارگذاری نمی‌شود و برای همیشه از آنِ شماست. برای استفادهٔ آفلاین آن را همراه فایل‌های کُدک نگه دارید.",
+      download: "دانلود",
+      remove: "حذف",
+      preparing: "در حال آماده‌سازی کُدک…",
+      optimizing: "در حال بهینه‌سازی…",
+      decoding: "در حال خواندن…",
+      failed: "ناموفق",
+      copied: "در کلیپ‌بورد کپی شد!",
+      share_text: "Make It Tiny — یک بهینه‌ساز تصویر رایگان و آفلاین. تصاویر را بکشید و رها کنید یا بچسبانید تا با WebP، JPEG، PNG یا AVIF حجمشان را کم کنید. همه‌چیز در مرورگر شما اجرا می‌شود؛ چیزی بارگذاری نمی‌شود. ساختهٔ Al Sweigart. https://inventwithpython.com",
+    },
+
+    th: {
+      app_name: "Make It Tiny",
+      tagline: "ปรับขนาดไฟล์รูปภาพให้เล็กลงในเบราว์เซอร์ของคุณ ไม่มีการอัปโหลดใด ๆ",
+      drop_title: "วางรูปภาพที่นี่",
+      drop_sub: "หรือคลิกเพื่อเลือกไฟล์ หรือวางด้วย",
+      format_label: "รูปแบบผลลัพธ์",
+      format_original: "ต้นฉบับ",
+      format_original_note: "คงรูปแบบเดิมของแต่ละภาพ (ภาพที่วางจะกลายเป็น WebP)",
+      quality_label: "คุณภาพ",
+      effort_label: "ระดับการบีบอัด",
+      quality_help: "คุณภาพต่ำลง = ไฟล์เล็กลง",
+      effort_help: "{format} เป็นแบบไม่สูญเสียข้อมูล — ระดับสูงขึ้นจะเล็กลงอีกนิด แต่ช้ากว่า",
+      options_label: "ตัวเลือก",
+      resize_toggle: "ย่อให้พอดี",
+      unit_px: "พิกเซล",
+      unit_percent: "เปอร์เซ็นต์",
+      px: "px สูงสุด",
+      strip_toggle: "ลบข้อมูลเมตา ({exif}, GPS…)",
+      exif_word: "EXIF",
+      exif_wiki_url: "https://th.wikipedia.org/wiki/Exif",
+      lossy_toggle: "อนุญาตการบีบอัดแบบ{lossy}",
+      lossy_word: "สูญเสียข้อมูล",
+      reprocess: "ประมวลผลใหม่",
+      cancel: "ยกเลิก",
+      canceled: "ยกเลิกแล้ว",
+      progress_of: "กำลังปรับ {i} จาก {n}…",
+      summary_saved: "ประหยัดรวม:",
+      download_zip: "ดาวน์โหลดทั้งหมด (.zip)",
+      download_separate: "ดาวน์โหลดทั้งหมด (แยกไฟล์)",
+      clear_all: "ล้าง",
+      share: "แชร์แอปนี้",
+      credit_1: "สร้างและตรวจทานโดยมนุษย์โดย",
+      credit_2: "แอปนี้ทำงานในเบราว์เซอร์ของคุณทั้งหมด — ไม่มีการอัปโหลด และเป็นของคุณตลอดไป เก็บไว้พร้อมไฟล์ตัวแปลงสัญญาณเพื่อใช้งานแบบออฟไลน์",
+      download: "ดาวน์โหลด",
+      remove: "นำออก",
+      preparing: "กำลังเตรียมตัวแปลงสัญญาณ…",
+      optimizing: "กำลังปรับให้เหมาะสม…",
+      decoding: "กำลังอ่าน…",
+      failed: "ล้มเหลว",
+      copied: "คัดลอกไปยังคลิปบอร์ดแล้ว!",
+      share_text: "Make It Tiny — เครื่องมือปรับขนาดรูปภาพฟรีที่ทำงานแบบออฟไลน์ ลาก วาง หรือวางรูปภาพเพื่อลดขนาดด้วย WebP, JPEG, PNG หรือ AVIF ทุกอย่างทำงานในเบราว์เซอร์ ไม่มีการอัปโหลด สร้างโดย Al Sweigart https://inventwithpython.com",
+    },
+
+    he: {
+      app_name: "Make It Tiny",
+      tagline: "מטבו את גודל קובצי התמונות בדפדפן. שום דבר לא מועלה.",
+      drop_title: "גררו לכאן תמונות",
+      drop_sub: "או לחצו לבחירת קבצים, או הדביקו באמצעות",
+      format_label: "פורמט פלט",
+      format_original: "מקורי",
+      format_original_note: "שומר על הפורמט של כל תמונה (תמונות מודבקות הופכות ל‑WebP).",
+      quality_label: "איכות",
+      effort_label: "רמת דחיסה",
+      quality_help: "איכות נמוכה יותר = קובץ קטן יותר.",
+      effort_help: "{format} הוא ללא אובדן — רמה גבוהה יותר חוסכת עוד מעט, אך לאט יותר.",
+      options_label: "אפשרויות",
+      resize_toggle: "הקטנה כדי להתאים",
+      unit_px: "פיקסלים",
+      unit_percent: "אחוזים",
+      px: "px מרבי",
+      strip_toggle: "הסרת מטא‑נתונים ({exif}, GPS…)",
+      exif_word: "EXIF",
+      exif_wiki_url: "https://he.wikipedia.org/wiki/Exif",
+      lossy_toggle: "לאפשר אופטימיזציה {lossy}",
+      lossy_word: "עם אובדן",
+      lossy_wiki_url: "https://he.wikipedia.org/wiki/%D7%93%D7%97%D7%99%D7%A1%D7%94_%D7%A2%D7%9D_%D7%90%D7%99%D7%91%D7%95%D7%93",
+      reprocess: "עיבוד מחדש",
+      cancel: "ביטול",
+      canceled: "בוטל",
+      progress_of: "ממטב {i} מתוך {n}…",
+      summary_saved: "נחסך בסך הכול:",
+      download_zip: "הורדת הכול (‎.zip)",
+      download_separate: "הורדת הכול (בנפרד)",
+      clear_all: "ניקוי",
+      share: "שיתוף היישום",
+      credit_1: "נוצר ונבדק ע\"י אדם בידי",
+      credit_2: "היישום פועל כולו בדפדפן שלך — שום דבר לא מועלה והוא שלך לתמיד. שמרו אותו יחד עם קובצי הקודק שלו לשימוש לא מקוון.",
+      download: "הורדה",
+      remove: "הסרה",
+      preparing: "מכין קודק…",
+      optimizing: "ממטב…",
+      decoding: "קורא…",
+      failed: "נכשל",
+      copied: "הועתק ללוח!",
+      share_text: "Make It Tiny — כלי חינמי לאופטימיזציית תמונות שעובד לא מקוון. גררו, שחררו או הדביקו תמונות כדי להקטין אותן עם WebP, JPEG, PNG או AVIF. הכול פועל בדפדפן; שום דבר לא מועלה. נוצר בידי Al Sweigart. https://inventwithpython.com",
+    },
+
+    cs: {
+      app_name: "Make It Tiny",
+      tagline: "Optimalizujte velikost obrázků přímo v prohlížeči. Nic se nenahrává.",
+      drop_title: "Sem přetáhněte obrázky",
+      drop_sub: "nebo klikněte pro výběr souborů, či vložte pomocí",
+      format_label: "Výstupní formát",
+      format_original: "Původní",
+      format_original_note: "Zachová formát každého obrázku (vložené obrázky se změní na WebP).",
+      quality_label: "Kvalita",
+      effort_label: "Úroveň komprese",
+      quality_help: "Nižší kvalita = menší soubor.",
+      effort_help: "{format} je bezztrátový — vyšší úroveň ušetří o něco víc, ale pomaleji.",
+      options_label: "Možnosti",
+      resize_toggle: "Zmenšit, aby se vešlo",
+      unit_px: "Pixely",
+      unit_percent: "Procenta",
+      px: "px max.",
+      strip_toggle: "Odstranit metadata ({exif}, GPS…)",
+      exif_word: "EXIF",
+      exif_wiki_url: "https://cs.wikipedia.org/wiki/Exif",
+      lossy_toggle: "Povolit {lossy} optimalizaci",
+      lossy_word: "ztrátovou",
+      lossy_wiki_url: "https://cs.wikipedia.org/wiki/Ztr%C3%A1tov%C3%A1_komprese",
+      reprocess: "Znovu zpracovat",
+      cancel: "Zrušit",
+      canceled: "Zrušeno",
+      progress_of: "Optimalizuji {i} z {n}…",
+      summary_saved: "Celkem ušetřeno:",
+      download_zip: "Stáhnout vše (.zip)",
+      download_separate: "Stáhnout vše (zvlášť)",
+      clear_all: "Vymazat",
+      share: "Sdílet tuto aplikaci",
+      credit_1: "Vytvořil a člověkem zkontroloval",
+      credit_2: "Tato aplikace běží zcela ve vašem prohlížeči — nic se nenahrává a je navždy vaše. Uchovejte ji spolu se soubory kodeků, abyste ji mohli používat offline.",
+      download: "Stáhnout",
+      remove: "Odebrat",
+      preparing: "Připravuji kodek…",
+      optimizing: "Optimalizuji…",
+      decoding: "Čtu…",
+      failed: "Selhalo",
+      copied: "Zkopírováno do schránky!",
+      share_text: "Make It Tiny — bezplatný offline optimalizátor obrázků. Přetáhněte nebo vložte obrázky a zmenšete jejich velikost pomocí WebP, JPEG, PNG nebo AVIF. Vše běží ve vašem prohlížeči; nic se nenahrává. Vytvořil Al Sweigart. https://inventwithpython.com",
+    },
+
+    uk: {
+      app_name: "Make It Tiny",
+      tagline: "Оптимізуйте розмір зображень просто у браузері. Нічого не завантажується на сервер.",
+      drop_title: "Перетягніть зображення сюди",
+      drop_sub: "або натисніть, щоб вибрати файли, чи вставте за допомогою",
+      format_label: "Формат виводу",
+      format_original: "Оригінал",
+      format_original_note: "Зберігає формат кожного зображення (вставлені стають WebP).",
+      quality_label: "Якість",
+      effort_label: "Рівень стиснення",
+      quality_help: "Нижча якість = менший файл.",
+      effort_help: "{format} — без втрат: вищий рівень трохи зменшить розмір, але повільніше.",
+      options_label: "Параметри",
+      resize_toggle: "Зменшити за розміром",
+      unit_px: "Пікселі",
+      unit_percent: "Відсотки",
+      px: "px макс.",
+      strip_toggle: "Видалити метадані ({exif}, GPS…)",
+      exif_word: "EXIF",
+      exif_wiki_url: "https://uk.wikipedia.org/wiki/Exif",
+      lossy_toggle: "Дозволити стиснення {lossy}",
+      lossy_word: "з втратами",
+      lossy_wiki_url: "https://uk.wikipedia.org/wiki/%D0%A1%D1%82%D0%B8%D1%81%D0%BD%D0%B5%D0%BD%D0%BD%D1%8F_%D0%B7_%D0%B2%D1%82%D1%80%D0%B0%D1%82%D0%B0%D0%BC%D0%B8",
+      reprocess: "Обробити знову",
+      cancel: "Скасувати",
+      canceled: "Скасовано",
+      progress_of: "Оптимізація {i} з {n}…",
+      summary_saved: "Усього заощаджено:",
+      download_zip: "Завантажити все (.zip)",
+      download_separate: "Завантажити все (окремо)",
+      clear_all: "Очистити",
+      share: "Поділитися застосунком",
+      credit_1: "Створено та перевірено людиною:",
+      credit_2: "Цей застосунок працює повністю у вашому браузері — нічого не завантажується, і він назавжди ваш. Зберігайте його разом із файлами кодеків, щоб користуватися офлайн.",
+      download: "Завантажити",
+      remove: "Вилучити",
+      preparing: "Підготовка кодека…",
+      optimizing: "Оптимізація…",
+      decoding: "Читання…",
+      failed: "Помилка",
+      copied: "Скопійовано в буфер обміну!",
+      share_text: "Make It Tiny — безкоштовний офлайн‑оптимізатор зображень. Перетягніть, відпустіть або вставте зображення, щоб зменшити їхній розмір за допомогою WebP, JPEG, PNG чи AVIF. Усе працює у браузері; нічого не завантажується. Автор: Al Sweigart. https://inventwithpython.com",
+    },
+
+    sv: {
+      app_name: "Make It Tiny",
+      tagline: "Optimera bildernas filstorlek i webbläsaren. Inget laddas upp.",
+      drop_title: "Släpp bilder här",
+      drop_sub: "eller klicka för att välja filer, eller klistra in med",
+      format_label: "Utdataformat",
+      format_original: "Original",
+      format_original_note: "Behåller varje bilds eget format (inklistrade bilder blir WebP).",
+      quality_label: "Kvalitet",
+      effort_label: "Komprimeringsnivå",
+      quality_help: "Lägre kvalitet = mindre fil.",
+      effort_help: "{format} är förlustfritt — högre nivå sparar lite mer, men långsammare.",
+      options_label: "Alternativ",
+      resize_toggle: "Krymp för att passa",
+      unit_px: "Pixlar",
+      unit_percent: "Procent",
+      px: "px max",
+      strip_toggle: "Ta bort metadata ({exif}, GPS…)",
+      exif_word: "EXIF",
+      exif_wiki_url: "https://sv.wikipedia.org/wiki/Exif",
+      lossy_toggle: "Tillåt {lossy} optimering",
+      lossy_word: "destruktiv",
+      reprocess: "Bearbeta igen",
+      cancel: "Avbryt",
+      canceled: "Avbruten",
+      progress_of: "Optimerar {i} av {n}…",
+      summary_saved: "Totalt sparat:",
+      download_zip: "Ladda ner alla (.zip)",
+      download_separate: "Ladda ner alla (separat)",
+      clear_all: "Rensa",
+      share: "Dela appen",
+      credit_1: "Skapad och granskad av en människa av",
+      credit_2: "Appen körs helt i din webbläsare — inget laddas upp och den är din för alltid. Behåll den tillsammans med dess codec-filer för att använda den offline.",
+      download: "Ladda ner",
+      remove: "Ta bort",
+      preparing: "Förbereder codec…",
+      optimizing: "Optimerar…",
+      decoding: "Läser…",
+      failed: "Misslyckades",
+      copied: "Kopierat till urklipp!",
+      share_text: "Make It Tiny — en gratis bildoptimerare som fungerar offline. Dra, släpp eller klistra in bilder för att krympa dem med WebP, JPEG, PNG eller AVIF. Allt körs i din webbläsare; inget laddas upp. Skapad av Al Sweigart. https://inventwithpython.com",
+    },
+
+    ro: {
+      app_name: "Make It Tiny",
+      tagline: "Optimizează dimensiunea imaginilor direct în browser. Nu se încarcă nimic.",
+      drop_title: "Trage imaginile aici",
+      drop_sub: "sau dă clic pentru a alege fișiere, ori lipește cu",
+      format_label: "Format de ieșire",
+      format_original: "Original",
+      format_original_note: "Păstrează formatul fiecărei imagini (imaginile lipite devin WebP).",
+      quality_label: "Calitate",
+      effort_label: "Nivel de compresie",
+      quality_help: "Calitate mai mică = fișier mai mic.",
+      effort_help: "{format} este fără pierderi — un nivel mai mare economisește puțin mai mult, dar mai lent.",
+      options_label: "Opțiuni",
+      resize_toggle: "Micșorează pentru a încăpea",
+      unit_px: "Pixeli",
+      unit_percent: "Procent",
+      px: "px max.",
+      strip_toggle: "Elimină metadatele ({exif}, GPS…)",
+      exif_word: "EXIF",
+      exif_wiki_url: "https://ro.wikipedia.org/wiki/Exif",
+      lossy_toggle: "Permite optimizarea {lossy}",
+      lossy_word: "cu pierderi",
+      reprocess: "Reprocesează",
+      cancel: "Anulează",
+      canceled: "Anulat",
+      progress_of: "Se optimizează {i} din {n}…",
+      summary_saved: "Total economisit:",
+      download_zip: "Descarcă tot (.zip)",
+      download_separate: "Descarcă tot (separat)",
+      clear_all: "Golește",
+      share: "Distribuie această aplicație",
+      credit_1: "Generat și verificat de un om de",
+      credit_2: "Această aplicație rulează integral în browserul tău — nu se încarcă nimic și este a ta pentru totdeauna. Păstreaz-o împreună cu fișierele ei de codec pentru a o folosi offline.",
+      download: "Descarcă",
+      remove: "Elimină",
+      preparing: "Se pregătește codecul…",
+      optimizing: "Se optimizează…",
+      decoding: "Se citește…",
+      failed: "Eșuat",
+      copied: "Copiat în clipboard!",
+      share_text: "Make It Tiny — un optimizator de imagini gratuit, care funcționează offline. Trage, plasează sau lipește imagini pentru a le micșora cu WebP, JPEG, PNG sau AVIF. Totul rulează în browser; nu se încarcă nimic. Creat de Al Sweigart. https://inventwithpython.com",
+    },
+
+    el: {
+      app_name: "Make It Tiny",
+      tagline: "Βελτιστοποιήστε το μέγεθος των εικόνων μέσα στο πρόγραμμα περιήγησης. Δεν ανεβαίνει τίποτα.",
+      drop_title: "Αφήστε εικόνες εδώ",
+      drop_sub: "ή κάντε κλικ για επιλογή αρχείων, ή επικολλήστε με",
+      format_label: "Μορφή εξόδου",
+      format_original: "Πρωτότυπη",
+      format_original_note: "Διατηρεί τη μορφή κάθε εικόνας (οι επικολλημένες γίνονται WebP).",
+      quality_label: "Ποιότητα",
+      effort_label: "Επίπεδο συμπίεσης",
+      quality_help: "Χαμηλότερη ποιότητα = μικρότερο αρχείο.",
+      effort_help: "Το {format} είναι χωρίς απώλειες — υψηλότερο επίπεδο εξοικονομεί λίγο ακόμη, αλλά πιο αργά.",
+      options_label: "Επιλογές",
+      resize_toggle: "Σμίκρυνση για προσαρμογή",
+      unit_px: "Εικονοστοιχεία",
+      unit_percent: "Ποσοστό",
+      px: "px μέγ.",
+      strip_toggle: "Αφαίρεση μεταδεδομένων ({exif}, GPS…)",
+      exif_word: "EXIF",
+      exif_wiki_url: "https://el.wikipedia.org/wiki/Exif",
+      lossy_toggle: "Να επιτρέπεται η {lossy} βελτιστοποίηση",
+      lossy_word: "απωλεστική",
+      reprocess: "Επανεπεξεργασία",
+      cancel: "Ακύρωση",
+      canceled: "Ακυρώθηκε",
+      progress_of: "Βελτιστοποίηση {i} από {n}…",
+      summary_saved: "Συνολική εξοικονόμηση:",
+      download_zip: "Λήψη όλων (.zip)",
+      download_separate: "Λήψη όλων (ξεχωριστά)",
+      clear_all: "Εκκαθάριση",
+      share: "Κοινοποίηση εφαρμογής",
+      credit_1: "Δημιουργήθηκε και ελέγχθηκε από άνθρωπο από τον",
+      credit_2: "Αυτή η εφαρμογή εκτελείται εξ ολοκλήρου στο πρόγραμμα περιήγησής σας — δεν ανεβαίνει τίποτα και σας ανήκει για πάντα. Κρατήστε τη μαζί με τα αρχεία codec για χρήση εκτός σύνδεσης.",
+      download: "Λήψη",
+      remove: "Αφαίρεση",
+      preparing: "Προετοιμασία codec…",
+      optimizing: "Βελτιστοποίηση…",
+      decoding: "Ανάγνωση…",
+      failed: "Απέτυχε",
+      copied: "Αντιγράφηκε στο πρόχειρο!",
+      share_text: "Make It Tiny — ένα δωρεάν εργαλείο βελτιστοποίησης εικόνων που λειτουργεί εκτός σύνδεσης. Σύρετε, αποθέστε ή επικολλήστε εικόνες για να μικρύνετε το μέγεθός τους με WebP, JPEG, PNG ή AVIF. Όλα εκτελούνται στο πρόγραμμα περιήγησής σας· δεν ανεβαίνει τίποτα. Από τον Al Sweigart. https://inventwithpython.com",
+    },
+
+    fi: {
+      app_name: "Make It Tiny",
+      tagline: "Optimoi kuvatiedostojen koko selaimessasi. Mitään ei ladata palvelimelle.",
+      drop_title: "Pudota kuvat tähän",
+      drop_sub: "tai valitse tiedostot napsauttamalla, tai liitä näppäimillä",
+      format_label: "Tulostusmuoto",
+      format_original: "Alkuperäinen",
+      format_original_note: "Säilyttää kunkin kuvan oman muodon (liitetyistä kuvista tulee WebP).",
+      quality_label: "Laatu",
+      effort_label: "Pakkaustaso",
+      quality_help: "Pienempi laatu = pienempi tiedosto.",
+      effort_help: "{format} on häviötön — korkeampi taso pienentää hieman lisää, mutta hitaammin.",
+      options_label: "Asetukset",
+      resize_toggle: "Pienennä sopivaksi",
+      unit_px: "Pikseliä",
+      unit_percent: "Prosentti",
+      px: "px enint.",
+      strip_toggle: "Poista metatiedot ({exif}, GPS…)",
+      exif_word: "EXIF",
+      exif_wiki_url: "https://fi.wikipedia.org/wiki/Exif",
+      lossy_toggle: "Salli {lossy} optimointi",
+      lossy_word: "häviöllinen",
+      lossy_wiki_url: "https://fi.wikipedia.org/wiki/H%C3%A4vi%C3%B6llinen_pakkaus",
+      reprocess: "Käsittele uudelleen",
+      cancel: "Peruuta",
+      canceled: "Peruutettu",
+      progress_of: "Optimoidaan {i}/{n}…",
+      summary_saved: "Säästö yhteensä:",
+      download_zip: "Lataa kaikki (.zip)",
+      download_separate: "Lataa kaikki (erikseen)",
+      clear_all: "Tyhjennä",
+      share: "Jaa tämä sovellus",
+      credit_1: "Luonut ja ihmisen tarkistama:",
+      credit_2: "Tämä sovellus toimii kokonaan selaimessasi — mitään ei ladata ja se on ikuisesti sinun. Säilytä se koodekkitiedostojensa kanssa käyttääksesi sitä offline-tilassa.",
+      download: "Lataa",
+      remove: "Poista",
+      preparing: "Valmistellaan koodekkia…",
+      optimizing: "Optimoidaan…",
+      decoding: "Luetaan…",
+      failed: "Epäonnistui",
+      copied: "Kopioitu leikepöydälle!",
+      share_text: "Make It Tiny — ilmainen, offline-tilassa toimiva kuvien optimoija. Vedä, pudota tai liitä kuvia pienentääksesi niiden kokoa WebP-, JPEG-, PNG- tai AVIF-muodoilla. Kaikki toimii selaimessasi; mitään ei ladata. Tekijä Al Sweigart. https://inventwithpython.com",
+    },
+
+    da: {
+      app_name: "Make It Tiny",
+      tagline: "Optimér billedernes filstørrelse i din browser. Intet uploades.",
+      drop_title: "Slip billeder her",
+      drop_sub: "eller klik for at vælge filer, eller indsæt med",
+      format_label: "Outputformat",
+      format_original: "Original",
+      format_original_note: "Bevarer hvert billedes eget format (indsatte billeder bliver til WebP).",
+      quality_label: "Kvalitet",
+      effort_label: "Komprimeringsniveau",
+      quality_help: "Lavere kvalitet = mindre fil.",
+      effort_help: "{format} er tabsfrit — et højere niveau sparer lidt mere, men langsommere.",
+      options_label: "Indstillinger",
+      resize_toggle: "Formindsk, så det passer",
+      unit_px: "Pixels",
+      unit_percent: "Procent",
+      px: "px maks.",
+      strip_toggle: "Fjern metadata ({exif}, GPS…)",
+      exif_word: "EXIF",
+      exif_wiki_url: "https://da.wikipedia.org/wiki/Exif",
+      lossy_toggle: "Tillad {lossy} optimering",
+      lossy_word: "tabsgivende",
+      reprocess: "Behandl igen",
+      cancel: "Annullér",
+      canceled: "Annulleret",
+      progress_of: "Optimerer {i} af {n}…",
+      summary_saved: "Sparet i alt:",
+      download_zip: "Download alle (.zip)",
+      download_separate: "Download alle (separat)",
+      clear_all: "Ryd",
+      share: "Del denne app",
+      credit_1: "Genereret og gennemgået af et menneske af",
+      credit_2: "Denne app kører helt i din browser — intet uploades, og den er din for altid. Behold den sammen med dens codec-filer for at bruge den offline.",
+      download: "Download",
+      remove: "Fjern",
+      preparing: "Forbereder codec…",
+      optimizing: "Optimerer…",
+      decoding: "Læser…",
+      failed: "Mislykkedes",
+      copied: "Kopieret til udklipsholder!",
+      share_text: "Make It Tiny — en gratis billedoptimering, der virker offline. Træk, slip eller indsæt billeder for at gøre dem mindre med WebP, JPEG, PNG eller AVIF. Alt kører i din browser; intet uploades. Lavet af Al Sweigart. https://inventwithpython.com",
+    },
+
+    nb: {
+      app_name: "Make It Tiny",
+      tagline: "Optimaliser bildefilstørrelser i nettleseren. Ingenting lastes opp.",
+      drop_title: "Slipp bilder her",
+      drop_sub: "eller klikk for å velge filer, eller lim inn med",
+      format_label: "Utdataformat",
+      format_original: "Original",
+      format_original_note: "Beholder hvert bildes eget format (innlimte bilder blir WebP).",
+      quality_label: "Kvalitet",
+      effort_label: "Komprimeringsnivå",
+      quality_help: "Lavere kvalitet = mindre fil.",
+      effort_help: "{format} er tapsfritt — høyere nivå sparer litt mer, men går tregere.",
+      options_label: "Alternativer",
+      resize_toggle: "Krymp for å passe",
+      unit_px: "Piksler",
+      unit_percent: "Prosent",
+      px: "px maks.",
+      strip_toggle: "Fjern metadata ({exif}, GPS…)",
+      exif_word: "EXIF",
+      exif_wiki_url: "https://no.wikipedia.org/wiki/Exif",
+      lossy_toggle: "Tillat {lossy} optimalisering",
+      lossy_word: "tapsbasert",
+      reprocess: "Behandle på nytt",
+      cancel: "Avbryt",
+      canceled: "Avbrutt",
+      progress_of: "Optimaliserer {i} av {n}…",
+      summary_saved: "Spart totalt:",
+      download_zip: "Last ned alle (.zip)",
+      download_separate: "Last ned alle (separat)",
+      clear_all: "Tøm",
+      share: "Del denne appen",
+      credit_1: "Generert og gjennomgått av et menneske av",
+      credit_2: "Denne appen kjører helt i nettleseren din — ingenting lastes opp, og den er din for alltid. Behold den sammen med codec-filene for å bruke den offline.",
+      download: "Last ned",
+      remove: "Fjern",
+      preparing: "Forbereder kodek…",
+      optimizing: "Optimaliserer…",
+      decoding: "Leser…",
+      failed: "Mislyktes",
+      copied: "Kopiert til utklippstavlen!",
+      share_text: "Make It Tiny — en gratis bildeoptimaliserer som fungerer offline. Dra, slipp eller lim inn bilder for å krympe dem med WebP, JPEG, PNG eller AVIF. Alt kjører i nettleseren din; ingenting lastes opp. Laget av Al Sweigart. https://inventwithpython.com",
+    },
+
+    hu: {
+      app_name: "Make It Tiny",
+      tagline: "Optimalizáld a képek fájlméretét a böngésződben. Semmi sem töltődik fel.",
+      drop_title: "Húzd ide a képeket",
+      drop_sub: "vagy kattints a fájlok kiválasztásához, vagy illeszd be ezzel",
+      format_label: "Kimeneti formátum",
+      format_original: "Eredeti",
+      format_original_note: "Megtartja minden kép saját formátumát (a beillesztett képek WebP lesznek).",
+      quality_label: "Minőség",
+      effort_label: "Tömörítési szint",
+      quality_help: "Alacsonyabb minőség = kisebb fájl.",
+      effort_help: "A {format} veszteségmentes — a magasabb szint kicsit többet spórol, de lassabban.",
+      options_label: "Beállítások",
+      resize_toggle: "Kicsinyítés a beillesztéshez",
+      unit_px: "Pixel",
+      unit_percent: "Százalék",
+      px: "px max.",
+      strip_toggle: "Metaadatok eltávolítása ({exif}, GPS…)",
+      exif_word: "EXIF",
+      exif_wiki_url: "https://hu.wikipedia.org/wiki/Exif",
+      lossy_toggle: "{lossy} optimalizálás engedélyezése",
+      lossy_word: "veszteséges",
+      lossy_wiki_url: "https://hu.wikipedia.org/wiki/Vesztes%C3%A9ges_t%C3%B6m%C3%B6r%C3%ADt%C3%A9s",
+      reprocess: "Újrafeldolgozás",
+      cancel: "Mégse",
+      canceled: "Megszakítva",
+      progress_of: "{i}/{n} optimalizálása…",
+      summary_saved: "Összes megtakarítás:",
+      download_zip: "Összes letöltése (.zip)",
+      download_separate: "Összes letöltése (külön)",
+      clear_all: "Törlés",
+      share: "Alkalmazás megosztása",
+      credit_1: "Készítette és emberi kézzel ellenőrizte:",
+      credit_2: "Ez az alkalmazás teljesen a böngésződben fut — semmi sem töltődik fel, és örökre a tiéd. Tartsd a codec-fájljaival együtt, hogy offline is használhasd.",
+      download: "Letöltés",
+      remove: "Eltávolítás",
+      preparing: "Kodek előkészítése…",
+      optimizing: "Optimalizálás…",
+      decoding: "Beolvasás…",
+      failed: "Sikertelen",
+      copied: "Vágólapra másolva!",
+      share_text: "Make It Tiny — ingyenes, offline működő képoptimalizáló. Húzd, ejtsd vagy illeszd be a képeket, hogy WebP, JPEG, PNG vagy AVIF formátummal csökkentsd a méretüket. Minden a böngésződben fut; semmi sem töltődik fel. Készítette: Al Sweigart. https://inventwithpython.com",
+    },
+
+    ms: {
+      app_name: "Make It Tiny",
+      tagline: "Optimumkan saiz fail imej dalam pelayar anda. Tiada apa-apa dimuat naik.",
+      drop_title: "Lepaskan imej di sini",
+      drop_sub: "atau klik untuk memilih fail, atau tampal dengan",
+      format_label: "Format keluaran",
+      format_original: "Asal",
+      format_original_note: "Mengekalkan format asal setiap imej (imej yang ditampal menjadi WebP).",
+      quality_label: "Kualiti",
+      effort_label: "Tahap mampatan",
+      quality_help: "Kualiti lebih rendah = fail lebih kecil.",
+      effort_help: "{format} ialah tanpa kehilangan — tahap lebih tinggi menjimatkan sedikit lagi, tetapi lebih perlahan.",
+      options_label: "Pilihan",
+      resize_toggle: "Kecilkan supaya muat",
+      unit_px: "Piksel",
+      unit_percent: "Peratus",
+      px: "px maks",
+      strip_toggle: "Buang metadata ({exif}, GPS…)",
+      exif_word: "EXIF",
+      exif_wiki_url: "https://ms.wikipedia.org/wiki/Exif",
+      lossy_toggle: "Benarkan pengoptimuman {lossy}",
+      lossy_word: "lossy",
+      reprocess: "Proses semula",
+      cancel: "Batal",
+      canceled: "Dibatalkan",
+      progress_of: "Mengoptimumkan {i} daripada {n}…",
+      summary_saved: "Jumlah dijimatkan:",
+      download_zip: "Muat turun semua (.zip)",
+      download_separate: "Muat turun semua (berasingan)",
+      clear_all: "Kosongkan",
+      share: "Kongsi apl ini",
+      credit_1: "Dijana dan disemak oleh manusia oleh",
+      credit_2: "Apl ini berjalan sepenuhnya dalam pelayar anda — tiada apa-apa dimuat naik dan ia milik anda selamanya. Simpan bersama fail codecnya untuk menggunakannya luar talian.",
+      download: "Muat turun",
+      remove: "Buang",
+      preparing: "Menyediakan codec…",
+      optimizing: "Mengoptimumkan…",
+      decoding: "Membaca…",
+      failed: "Gagal",
+      copied: "Disalin ke papan keratan!",
+      share_text: "Make It Tiny — pengoptimum imej percuma yang berfungsi luar talian. Seret, lepas atau tampal imej untuk mengecilkan saiznya dengan WebP, JPEG, PNG atau AVIF. Semuanya berjalan dalam pelayar anda; tiada apa-apa dimuat naik. Oleh Al Sweigart. https://inventwithpython.com",
+    },
+
+    bn: {
+      app_name: "Make It Tiny",
+      tagline: "আপনার ব্রাউজারেই ছবির ফাইলের আকার অপ্টিমাইজ করুন। কিছুই আপলোড হয় না।",
+      drop_title: "এখানে ছবি ছাড়ুন",
+      drop_sub: "অথবা ফাইল বেছে নিতে ক্লিক করুন, বা পেস্ট করুন",
+      format_label: "আউটপুট ফরম্যাট",
+      format_original: "মূল",
+      format_original_note: "প্রতিটি ছবির নিজস্ব ফরম্যাট রাখে (পেস্ট করা ছবি WebP হয়ে যায়)।",
+      quality_label: "মান",
+      effort_label: "সংকোচনের মাত্রা",
+      quality_help: "কম মান = ছোট ফাইল।",
+      effort_help: "{format} ক্ষতিহীন — বেশি মাত্রায় আরেকটু কমে, তবে ধীরে।",
+      options_label: "বিকল্প",
+      resize_toggle: "মানানসই করতে ছোট করুন",
+      unit_px: "পিক্সেল",
+      unit_percent: "শতাংশ",
+      px: "px সর্বোচ্চ",
+      strip_toggle: "মেটাডেটা মুছুন ({exif}, GPS…)",
+      exif_word: "EXIF",
+      lossy_toggle: "{lossy} অপ্টিমাইজেশন অনুমোদন করুন",
+      lossy_word: "ক্ষতিসহ",
+      reprocess: "আবার প্রক্রিয়া করুন",
+      cancel: "বাতিল",
+      canceled: "বাতিল করা হয়েছে",
+      progress_of: "{n}টির মধ্যে {i}টি অপ্টিমাইজ করা হচ্ছে…",
+      summary_saved: "মোট সাশ্রয়:",
+      download_zip: "সব ডাউনলোড (.zip)",
+      download_separate: "সব ডাউনলোড (আলাদা)",
+      clear_all: "মুছে ফেলুন",
+      share: "অ্যাপটি শেয়ার করুন",
+      credit_1: "তৈরি ও মানুষ দ্বারা পর্যালোচিত:",
+      credit_2: "এই অ্যাপ সম্পূর্ণভাবে আপনার ব্রাউজারে চলে — কিছুই আপলোড হয় না এবং এটি চিরকাল আপনার। অফলাইনে ব্যবহারের জন্য এটির কোডেক ফাইলগুলোর সাথে রাখুন।",
+      download: "ডাউনলোড",
+      remove: "সরান",
+      preparing: "কোডেক প্রস্তুত করা হচ্ছে…",
+      optimizing: "অপ্টিমাইজ করা হচ্ছে…",
+      decoding: "পড়া হচ্ছে…",
+      failed: "ব্যর্থ",
+      copied: "ক্লিপবোর্ডে অনুলিপি হয়েছে!",
+      share_text: "Make It Tiny — একটি ফ্রি, অফলাইন ইমেজ অপ্টিমাইজার। ছবি টেনে এনে ছাড়ুন বা পেস্ট করুন এবং WebP, JPEG, PNG বা AVIF দিয়ে আকার কমান। সবকিছু আপনার ব্রাউজারে চলে; কিছুই আপলোড হয় না। তৈরি করেছেন Al Sweigart। https://inventwithpython.com",
+    },
+
+    ur: {
+      app_name: "Make It Tiny",
+      tagline: "اپنے براؤزر میں ہی تصاویر کے فائل سائز کو بہتر بنائیں۔ کچھ اپ لوڈ نہیں ہوتا۔",
+      drop_title: "تصاویر یہاں چھوڑیں",
+      drop_sub: "یا فائلیں منتخب کرنے کے لیے کلک کریں، یا پیسٹ کریں",
+      format_label: "آؤٹ پٹ فارمیٹ",
+      format_original: "اصل",
+      format_original_note: "ہر تصویر کا اپنا فارمیٹ برقرار رکھتا ہے (پیسٹ کی گئی تصاویر WebP بن جاتی ہیں)۔",
+      quality_label: "معیار",
+      effort_label: "کمپریشن کی سطح",
+      quality_help: "کم معیار = چھوٹی فائل۔",
+      effort_help: "{format} بلا نقصان ہے — زیادہ سطح تھوڑا اور کم کرتی ہے، مگر سست۔",
+      options_label: "اختیارات",
+      resize_toggle: "فٹ کرنے کے لیے چھوٹا کریں",
+      unit_px: "پکسل",
+      unit_percent: "فیصد",
+      px: "px زیادہ سے زیادہ",
+      strip_toggle: "میٹا ڈیٹا ہٹائیں ({exif}، GPS…)",
+      exif_word: "EXIF",
+      lossy_toggle: "{lossy} بہتری کی اجازت دیں",
+      lossy_word: "نقصان والی",
+      reprocess: "دوبارہ عمل کریں",
+      cancel: "منسوخ",
+      canceled: "منسوخ کر دیا گیا",
+      progress_of: "{n} میں سے {i} کو بہتر بنایا جا رہا ہے…",
+      summary_saved: "کل بچت:",
+      download_zip: "سب ڈاؤن لوڈ کریں (.zip)",
+      download_separate: "سب ڈاؤن لوڈ کریں (الگ الگ)",
+      clear_all: "صاف کریں",
+      share: "یہ ایپ شیئر کریں",
+      credit_1: "تخلیق اور انسان کے ذریعے جائزہ شدہ از",
+      credit_2: "یہ ایپ مکمل طور پر آپ کے براؤزر میں چلتی ہے — کچھ اپ لوڈ نہیں ہوتا اور یہ ہمیشہ کے لیے آپ کی ہے۔ آف لائن استعمال کے لیے اسے اس کی کوڈیک فائلوں کے ساتھ رکھیں۔",
+      download: "ڈاؤن لوڈ",
+      remove: "ہٹائیں",
+      preparing: "کوڈیک تیار کیا جا رہا ہے…",
+      optimizing: "بہتر بنایا جا رہا ہے…",
+      decoding: "پڑھا جا رہا ہے…",
+      failed: "ناکام",
+      copied: "کلپ بورڈ پر کاپی ہو گیا!",
+      share_text: "Make It Tiny — ایک مفت، آف لائن امیج آپٹیمائزر۔ تصاویر گھسیٹ کر چھوڑیں یا پیسٹ کریں اور WebP، JPEG، PNG یا AVIF کے ساتھ ان کا سائز کم کریں۔ سب کچھ آپ کے براؤزر میں چلتا ہے؛ کچھ اپ لوڈ نہیں ہوتا۔ تخلیق کار: Al Sweigart۔ https://inventwithpython.com",
+    },
+
+    ta: {
+      app_name: "Make It Tiny",
+      tagline: "உங்கள் உலாவியிலேயே படக் கோப்பு அளவை மேம்படுத்துங்கள். எதுவும் பதிவேற்றப்படாது.",
+      drop_title: "படங்களை இங்கே இடுங்கள்",
+      drop_sub: "அல்லது கோப்புகளைத் தேர்வுசெய்ய கிளிக் செய்யவும், அல்லது ஒட்டவும்",
+      format_label: "வெளியீட்டு வடிவம்",
+      format_original: "அசல்",
+      format_original_note: "ஒவ்வொரு படத்தின் சொந்த வடிவத்தையும் தக்கவைக்கும் (ஒட்டப்பட்ட படங்கள் WebP ஆகும்).",
+      quality_label: "தரம்",
+      effort_label: "சுருக்க அளவு",
+      quality_help: "குறைந்த தரம் = சிறிய கோப்பு.",
+      effort_help: "{format} இழப்பில்லாதது — அதிக அளவு இன்னும் சிறிது குறைக்கும், ஆனால் மெதுவாக.",
+      options_label: "விருப்பங்கள்",
+      resize_toggle: "பொருந்த சிறிதாக்கு",
+      unit_px: "பிக்சல்கள்",
+      unit_percent: "சதவீதம்",
+      px: "px அதிகபட்சம்",
+      strip_toggle: "மேனிலைத் தரவை நீக்கு ({exif}, GPS…)",
+      exif_word: "EXIF",
+      lossy_toggle: "{lossy} மேம்படுத்தலை அனுமதி",
+      lossy_word: "இழப்புள்ள",
+      reprocess: "மீண்டும் செயலாக்கு",
+      cancel: "ரத்து",
+      canceled: "ரத்து செய்யப்பட்டது",
+      progress_of: "{n} இல் {i} ஐ மேம்படுத்துகிறது…",
+      summary_saved: "மொத்த சேமிப்பு:",
+      download_zip: "அனைத்தையும் பதிவிறக்கு (.zip)",
+      download_separate: "அனைத்தையும் பதிவிறக்கு (தனித்தனியாக)",
+      clear_all: "அழி",
+      share: "இந்த ஆப்பைப் பகிர்",
+      credit_1: "உருவாக்கியவர், மனிதரால் மதிப்பாய்வு செய்யப்பட்டது:",
+      credit_2: "இந்த ஆப் முழுவதும் உங்கள் உலாவியில் இயங்குகிறது — எதுவும் பதிவேற்றப்படாது, இது எப்போதும் உங்களுடையது. ஆஃப்லைனில் பயன்படுத்த அதன் கோடெக் கோப்புகளுடன் வைத்திருங்கள்.",
+      download: "பதிவிறக்கு",
+      remove: "அகற்று",
+      preparing: "கோடெக்கைத் தயார்செய்கிறது…",
+      optimizing: "மேம்படுத்துகிறது…",
+      decoding: "படிக்கிறது…",
+      failed: "தோல்வி",
+      copied: "கிளிப்போர்டுக்கு நகலெடுக்கப்பட்டது!",
+      share_text: "Make It Tiny — இலவச, ஆஃப்லைன் பட மேம்படுத்தி. படங்களை இழுத்து விடுங்கள் அல்லது ஒட்டுங்கள், WebP, JPEG, PNG அல்லது AVIF மூலம் அளவைக் குறையுங்கள். அனைத்தும் உங்கள் உலாவியில் இயங்கும்; எதுவும் பதிவேற்றப்படாது. உருவாக்கியவர்: Al Sweigart. https://inventwithpython.com",
+    },
+
+    fil: {
+      app_name: "Make It Tiny",
+      tagline: "I-optimize ang laki ng mga image file sa iyong browser. Walang ini-upload.",
+      drop_title: "I-drop ang mga larawan dito",
+      drop_sub: "o mag-click para pumili ng mga file, o i-paste gamit ang",
+      format_label: "Output na format",
+      format_original: "Orihinal",
+      format_original_note: "Pinapanatili ang sariling format ng bawat larawan (nagiging WebP ang mga naka-paste).",
+      quality_label: "Kalidad",
+      effort_label: "Lakas ng compression",
+      quality_help: "Mas mababang kalidad = mas maliit na file.",
+      effort_help: "Ang {format} ay lossless — mas mataas na lakas ay bahagyang mas maliit, ngunit mas mabagal.",
+      options_label: "Mga opsyon",
+      resize_toggle: "Paliitin para kasya",
+      unit_px: "Pixel",
+      unit_percent: "Porsiyento",
+      px: "px max",
+      strip_toggle: "Alisin ang metadata ({exif}, GPS…)",
+      exif_word: "EXIF",
+      lossy_toggle: "Payagan ang {lossy} na optimization",
+      lossy_word: "may kawalan",
+      reprocess: "Iproseso muli",
+      cancel: "Kanselahin",
+      canceled: "Nakansela",
+      progress_of: "Ino-optimize ang {i} ng {n}…",
+      summary_saved: "Kabuuang natipid:",
+      download_zip: "I-download lahat (.zip)",
+      download_separate: "I-download lahat (hiw-hiwalay)",
+      clear_all: "I-clear",
+      share: "Ibahagi ang app na ito",
+      credit_1: "Ginawa at sinuri ng tao ni",
+      credit_2: "Ganap na tumatakbo ang app na ito sa iyong browser — walang ini-upload at pag-aari mo ito magpakailanman. Itago ito kasama ang mga codec file nito para magamit offline.",
+      download: "I-download",
+      remove: "Alisin",
+      preparing: "Inihahanda ang codec…",
+      optimizing: "Ino-optimize…",
+      decoding: "Binabasa…",
+      failed: "Nabigo",
+      copied: "Nakopya sa clipboard!",
+      share_text: "Make It Tiny — isang libre at offline na image optimizer. Mag-drag, mag-drop, o mag-paste ng mga larawan para paliitin ang mga ito gamit ang WebP, JPEG, PNG, o AVIF. Lahat ay tumatakbo sa iyong browser; walang ini-upload. Gawa ni Al Sweigart. https://inventwithpython.com",
+    },
+
+    bg: {
+      app_name: "Make It Tiny",
+      tagline: "Оптимизирайте размера на изображенията в браузъра си. Нищо не се качва.",
+      drop_title: "Пуснете изображенията тук",
+      drop_sub: "или щракнете, за да изберете файлове, или поставете с",
+      format_label: "Изходен формат",
+      format_original: "Оригинален",
+      format_original_note: "Запазва собствения формат на всяко изображение (поставените стават WebP).",
+      quality_label: "Качество",
+      effort_label: "Ниво на компресия",
+      quality_help: "По-ниско качество = по-малък файл.",
+      effort_help: "{format} е без загуби — по-високото ниво спестява малко повече, но по-бавно.",
+      options_label: "Опции",
+      resize_toggle: "Намаляване, за да се побере",
+      unit_px: "Пиксели",
+      unit_percent: "Процент",
+      px: "px макс.",
+      strip_toggle: "Премахване на метаданни ({exif}, GPS…)",
+      exif_word: "EXIF",
+      exif_wiki_url: "https://bg.wikipedia.org/wiki/Exif",
+      lossy_toggle: "Разреши оптимизация {lossy}",
+      lossy_word: "със загуби",
+      reprocess: "Обработи отново",
+      cancel: "Отказ",
+      canceled: "Отменено",
+      progress_of: "Оптимизиране на {i} от {n}…",
+      summary_saved: "Общо спестено:",
+      download_zip: "Изтегли всички (.zip)",
+      download_separate: "Изтегли всички (поотделно)",
+      clear_all: "Изчисти",
+      share: "Сподели приложението",
+      credit_1: "Създадено и прегледано от човек от",
+      credit_2: "Това приложение работи изцяло в браузъра ви — нищо не се качва и е ваше завинаги. Пазете го заедно с файловете на кодеците, за да го използвате офлайн.",
+      download: "Изтегли",
+      remove: "Премахни",
+      preparing: "Подготвяне на кодека…",
+      optimizing: "Оптимизиране…",
+      decoding: "Четене…",
+      failed: "Неуспех",
+      copied: "Копирано в клипборда!",
+      share_text: "Make It Tiny — безплатен офлайн оптимизатор на изображения. Плъзнете, пуснете или поставете изображения, за да намалите размера им с WebP, JPEG, PNG или AVIF. Всичко работи в браузъра ви; нищо не се качва. От Al Sweigart. https://inventwithpython.com",
+    },
+
+    sr: {
+      app_name: "Make It Tiny",
+      tagline: "Оптимизујте величину слика у прегледачу. Ништа се не отпрема.",
+      drop_title: "Овде превуците слике",
+      drop_sub: "или кликните да изаберете датотеке, или налепите помоћу",
+      format_label: "Излазни формат",
+      format_original: "Оригинал",
+      format_original_note: "Задржава сопствени формат сваке слике (налепљене слике постају WebP).",
+      quality_label: "Квалитет",
+      effort_label: "Ниво компресије",
+      quality_help: "Нижи квалитет = мања датотека.",
+      effort_help: "{format} је без губитака — виши ниво уштеди мало више, али спорије.",
+      options_label: "Опције",
+      resize_toggle: "Смањи да стане",
+      unit_px: "Пиксели",
+      unit_percent: "Проценат",
+      px: "px макс.",
+      strip_toggle: "Уклони метаподатке ({exif}, GPS…)",
+      exif_word: "EXIF",
+      exif_wiki_url: "https://sr.wikipedia.org/wiki/Exif",
+      lossy_toggle: "Дозволи {lossy} оптимизацију",
+      lossy_word: "са губицима",
+      reprocess: "Поново обради",
+      cancel: "Откажи",
+      canceled: "Отказано",
+      progress_of: "Оптимизује се {i} од {n}…",
+      summary_saved: "Укупно уштеђено:",
+      download_zip: "Преузми све (.zip)",
+      download_separate: "Преузми све (појединачно)",
+      clear_all: "Очисти",
+      share: "Подели ову апликацију",
+      credit_1: "Направио и људски прегледао",
+      credit_2: "Ова апликација ради у потпуности у вашем прегледачу — ништа се не отпрема и заувек је ваша. Чувајте је уз њене кодек датотеке да бисте је користили ван мреже.",
+      download: "Преузми",
+      remove: "Уклони",
+      preparing: "Припрема кодека…",
+      optimizing: "Оптимизација…",
+      decoding: "Читање…",
+      failed: "Неуспело",
+      copied: "Копирано у оставу!",
+      share_text: "Make It Tiny — бесплатан оптимизатор слика који ради ван мреже. Превуците, отпустите или налепите слике да бисте им смањили величину помоћу WebP, JPEG, PNG или AVIF. Све ради у вашем прегледачу; ништа се не отпрема. Аутор: Al Sweigart. https://inventwithpython.com",
+    },
+
+    hr: {
+      app_name: "Make It Tiny",
+      tagline: "Optimizirajte veličinu slika u pregledniku. Ništa se ne prenosi.",
+      drop_title: "Ovdje ispustite slike",
+      drop_sub: "ili kliknite za odabir datoteka, ili zalijepite pomoću",
+      format_label: "Izlazni format",
+      format_original: "Izvorni",
+      format_original_note: "Zadržava vlastiti format svake slike (zalijepljene slike postaju WebP).",
+      quality_label: "Kvaliteta",
+      effort_label: "Razina kompresije",
+      quality_help: "Niža kvaliteta = manja datoteka.",
+      effort_help: "{format} je bez gubitaka — viša razina uštedi malo više, ali sporije.",
+      options_label: "Mogućnosti",
+      resize_toggle: "Smanji da stane",
+      unit_px: "Pikseli",
+      unit_percent: "Postotak",
+      px: "px maks.",
+      strip_toggle: "Ukloni metapodatke ({exif}, GPS…)",
+      exif_word: "EXIF",
+      exif_wiki_url: "https://hr.wikipedia.org/wiki/Exif",
+      lossy_toggle: "Dopusti {lossy} optimizaciju",
+      lossy_word: "s gubicima",
+      reprocess: "Ponovno obradi",
+      cancel: "Odustani",
+      canceled: "Otkazano",
+      progress_of: "Optimiziram {i} od {n}…",
+      summary_saved: "Ukupno ušteđeno:",
+      download_zip: "Preuzmi sve (.zip)",
+      download_separate: "Preuzmi sve (zasebno)",
+      clear_all: "Očisti",
+      share: "Podijeli ovu aplikaciju",
+      credit_1: "Izradio i ljudski pregledao",
+      credit_2: "Ova aplikacija radi u potpunosti u vašem pregledniku — ništa se ne prenosi i zauvijek je vaša. Čuvajte je uz njezine codec datoteke za korištenje izvan mreže.",
+      download: "Preuzmi",
+      remove: "Ukloni",
+      preparing: "Pripremam kodek…",
+      optimizing: "Optimiziram…",
+      decoding: "Čitam…",
+      failed: "Neuspjelo",
+      copied: "Kopirano u međuspremnik!",
+      share_text: "Make It Tiny — besplatan optimizator slika koji radi izvan mreže. Povucite, ispustite ili zalijepite slike da biste im smanjili veličinu pomoću WebP, JPEG, PNG ili AVIF. Sve radi u vašem pregledniku; ništa se ne prenosi. Izradio Al Sweigart. https://inventwithpython.com",
+    },
+
+    sk: {
+      app_name: "Make It Tiny",
+      tagline: "Optimalizujte veľkosť obrázkov priamo v prehliadači. Nič sa nenahráva.",
+      drop_title: "Sem presuňte obrázky",
+      drop_sub: "alebo kliknite na výber súborov, či vložte pomocou",
+      format_label: "Výstupný formát",
+      format_original: "Pôvodný",
+      format_original_note: "Zachová formát každého obrázka (vložené obrázky sa zmenia na WebP).",
+      quality_label: "Kvalita",
+      effort_label: "Úroveň kompresie",
+      quality_help: "Nižšia kvalita = menší súbor.",
+      effort_help: "{format} je bezstratový — vyššia úroveň ušetrí o niečo viac, ale pomalšie.",
+      options_label: "Možnosti",
+      resize_toggle: "Zmenšiť, aby sa zmestilo",
+      unit_px: "Pixely",
+      unit_percent: "Percentá",
+      px: "px max.",
+      strip_toggle: "Odstrániť metadáta ({exif}, GPS…)",
+      exif_word: "EXIF",
+      exif_wiki_url: "https://sk.wikipedia.org/wiki/Exif",
+      lossy_toggle: "Povoliť {lossy} optimalizáciu",
+      lossy_word: "stratovú",
+      reprocess: "Znova spracovať",
+      cancel: "Zrušiť",
+      canceled: "Zrušené",
+      progress_of: "Optimalizuje sa {i} z {n}…",
+      summary_saved: "Celkovo ušetrené:",
+      download_zip: "Stiahnuť všetko (.zip)",
+      download_separate: "Stiahnuť všetko (samostatne)",
+      clear_all: "Vymazať",
+      share: "Zdieľať túto aplikáciu",
+      credit_1: "Vytvoril a ľudsky skontroloval",
+      credit_2: "Táto aplikácia beží úplne vo vašom prehliadači — nič sa nenahráva a je navždy vaša. Uchovávajte ju spolu so súbormi kodekov, aby ste ju mohli používať offline.",
+      download: "Stiahnuť",
+      remove: "Odstrániť",
+      preparing: "Pripravuje sa kodek…",
+      optimizing: "Optimalizuje sa…",
+      decoding: "Načítava sa…",
+      failed: "Zlyhalo",
+      copied: "Skopírované do schránky!",
+      share_text: "Make It Tiny — bezplatný offline optimalizátor obrázkov. Presuňte, pustite alebo vložte obrázky a zmenšite ich veľkosť pomocou WebP, JPEG, PNG alebo AVIF. Všetko beží vo vašom prehliadači; nič sa nenahráva. Vytvoril Al Sweigart. https://inventwithpython.com",
+    },
+
+    ca: {
+      app_name: "Make It Tiny",
+      tagline: "Optimitza la mida dels fitxers d'imatge al navegador. No es puja res.",
+      drop_title: "Deixa anar les imatges aquí",
+      drop_sub: "o fes clic per triar fitxers, o enganxa amb",
+      format_label: "Format de sortida",
+      format_original: "Original",
+      format_original_note: "Conserva el format de cada imatge (les imatges enganxades passen a WebP).",
+      quality_label: "Qualitat",
+      effort_label: "Nivell de compressió",
+      quality_help: "Menys qualitat = fitxer més petit.",
+      effort_help: "{format} és sense pèrdua: més esforç estalvia una mica més, però més lent.",
+      options_label: "Opcions",
+      resize_toggle: "Redueix per encaixar",
+      unit_px: "Píxels",
+      unit_percent: "Percentatge",
+      px: "px màx.",
+      strip_toggle: "Elimina les metadades ({exif}, GPS…)",
+      exif_word: "EXIF",
+      exif_wiki_url: "https://ca.wikipedia.org/wiki/Exif",
+      lossy_toggle: "Permet l'optimització {lossy}",
+      lossy_word: "amb pèrdua",
+      reprocess: "Reprocessa",
+      cancel: "Cancel·la",
+      canceled: "Cancel·lat",
+      progress_of: "S'està optimitzant {i} de {n}…",
+      summary_saved: "Total estalviat:",
+      download_zip: "Baixa-ho tot (.zip)",
+      download_separate: "Baixa-ho tot (per separat)",
+      clear_all: "Neteja",
+      share: "Comparteix aquesta app",
+      credit_1: "Generat i revisat per una persona per",
+      credit_2: "Aquesta app funciona íntegrament al teu navegador: no es puja res i és teva per sempre. Conserva-la amb els seus fitxers de còdec per fer-la servir sense connexió.",
+      download: "Baixa",
+      remove: "Elimina",
+      preparing: "S'està preparant el còdec…",
+      optimizing: "S'està optimitzant…",
+      decoding: "S'està llegint…",
+      failed: "Ha fallat",
+      copied: "Copiat al porta-retalls!",
+      share_text: "Make It Tiny — un optimitzador d'imatges gratuït i sense connexió. Arrossega, deixa anar o enganxa imatges per reduir-ne la mida amb WebP, JPEG, PNG o AVIF. Tot s'executa al navegador; no es puja res. Fet per Al Sweigart. https://inventwithpython.com",
+    },
+
+    sl: {
+      app_name: "Make It Tiny",
+      tagline: "Optimizirajte velikost slik kar v brskalniku. Nič se ne naloži.",
+      drop_title: "Sem spustite slike",
+      drop_sub: "ali kliknite za izbiro datotek, ali prilepite z",
+      format_label: "Izhodni format",
+      format_original: "Izvirni",
+      format_original_note: "Ohrani lasten format vsake slike (prilepljene slike postanejo WebP).",
+      quality_label: "Kakovost",
+      effort_label: "Raven stiskanja",
+      quality_help: "Nižja kakovost = manjša datoteka.",
+      effort_help: "{format} je brez izgub — višja raven prihrani malce več, a počasneje.",
+      options_label: "Možnosti",
+      resize_toggle: "Pomanjšaj, da se prilega",
+      unit_px: "Slikovne pike",
+      unit_percent: "Odstotek",
+      px: "px najv.",
+      strip_toggle: "Odstrani metapodatke ({exif}, GPS…)",
+      exif_word: "EXIF",
+      exif_wiki_url: "https://sl.wikipedia.org/wiki/Exif",
+      lossy_toggle: "Dovoli {lossy} optimizacijo",
+      lossy_word: "izgubno",
+      reprocess: "Znova obdelaj",
+      cancel: "Prekliči",
+      canceled: "Preklicano",
+      progress_of: "Optimiziranje {i} od {n}…",
+      summary_saved: "Skupaj prihranjeno:",
+      download_zip: "Prenesi vse (.zip)",
+      download_separate: "Prenesi vse (ločeno)",
+      clear_all: "Počisti",
+      share: "Deli to aplikacijo",
+      credit_1: "Ustvaril in človeško pregledal",
+      credit_2: "Ta aplikacija teče v celoti v vašem brskalniku — nič se ne naloži in je za vedno vaša. Shranite jo skupaj z njenimi datotekami kodekov za uporabo brez povezave.",
+      download: "Prenesi",
+      remove: "Odstrani",
+      preparing: "Pripravljanje kodeka…",
+      optimizing: "Optimiziranje…",
+      decoding: "Branje…",
+      failed: "Spodletelo",
+      copied: "Kopirano v odložišče!",
+      share_text: "Make It Tiny — brezplačen optimizator slik, ki deluje brez povezave. Povlecite, spustite ali prilepite slike ter jim zmanjšajte velikost z WebP, JPEG, PNG ali AVIF. Vse teče v vašem brskalniku; nič se ne naloži. Ustvaril Al Sweigart. https://inventwithpython.com",
+    },
+  };
+
+  // Dropdown metadata: [code, flag emoji, native name]. Order defines dropdown order.
+  const LANGS = [
+    ["en", "🇬🇧", "English"],
+    ["zh", "🇨🇳", "简体中文"],
+    ["es", "🇪🇸", "Español"],
+    ["ja", "🇯🇵", "日本語"],
+    ["de", "🇩🇪", "Deutsch"],
+    ["pt", "🇵🇹", "Português"],
+    ["pt-BR", "🇧🇷", "Português (Brasil)"],
+    ["fr", "🇫🇷", "Français"],
+    ["ru", "🇷🇺", "Русский"],
+    ["ko", "🇰🇷", "한국어"],
+    ["id", "🇮🇩", "Bahasa Indonesia"],
+    ["it", "🇮🇹", "Italiano"],
+    ["pl", "🇵🇱", "Polski"],
+    ["tr", "🇹🇷", "Türkçe"],
+    ["vi", "🇻🇳", "Tiếng Việt"],
+    ["ar", "🇸🇦", "العربية"],
+    ["nl", "🇳🇱", "Nederlands"],
+    ["hi", "🇮🇳", "हिन्दी"],
+    ["fa", "🇮🇷", "فارسی"],
+    ["th", "🇹🇭", "ไทย"],
+    ["he", "🇮🇱", "עברית"],
+    ["cs", "🇨🇿", "Čeština"],
+    ["uk", "🇺🇦", "Українська"],
+    ["sv", "🇸🇪", "Svenska"],
+    ["ro", "🇷🇴", "Română"],
+    ["el", "🇬🇷", "Ελληνικά"],
+    ["fi", "🇫🇮", "Suomi"],
+    ["da", "🇩🇰", "Dansk"],
+    ["nb", "🇳🇴", "Norsk bokmål"],
+    ["hu", "🇭🇺", "Magyar"],
+    ["ms", "🇲🇾", "Bahasa Melayu"],
+    ["bn", "🇧🇩", "বাংলা"],
+    ["ur", "🇵🇰", "اردو"],
+    ["ta", "🇮🇳", "தமிழ்"],
+    ["fil", "🇵🇭", "Filipino"],
+    ["bg", "🇧🇬", "Български"],
+    ["sr", "🇷🇸", "Српски"],
+    ["hr", "🇭🇷", "Hrvatski"],
+    ["sk", "🇸🇰", "Slovenčina"],
+    ["ca", "🇦🇩", "Català"],
+    ["sl", "🇸🇮", "Slovenščina"],
+  ];
+
+  // Right-to-left scripts, so we can flip the document direction.
+  const RTL_LANGS = new Set(["ar", "he", "fa", "ur"]);
+
+  // Pick a language from the browser's preferences: try the full tag first (so pt-BR wins
+  // over pt), then the base language; fall back to English.
+  const supported = Object.keys(translations);
+  const supportedLower = new Map(supported.map((k) => [k.toLowerCase(), k]));
+  let lang = "en";
+  for (const pref of (navigator.languages || [navigator.language || "en"])) {
+    const full = (pref || "").toLowerCase();
+    const base = full.slice(0, 2);
+    const hit = supportedLower.get(full) || supportedLower.get(base);
+    if (hit) { lang = hit; break; }
+  }
+
+  const t = (key) => (translations[lang] && translations[lang][key]) || translations.en[key] || key;
+
+  function applyI18n() {
+    document.documentElement.lang = lang;
+    document.documentElement.dir = RTL_LANGS.has(lang) ? "rtl" : "ltr";
+    document.querySelectorAll("[data-i18n]").forEach((el) => {
+      el.textContent = t(el.getAttribute("data-i18n"));
+    });
+    // Strings not covered by data-i18n:
+    document.getElementById("version").textContent = "v" + APP_VERSION;
+    refreshFormatUI();
+  }
+
+  /* -------------------------------------------------------------- Elements */
+  const $ = (id) => document.getElementById(id);
+  const dropzone = $("dropzone");
+  const fileInput = $("fileInput");
+  const formatSeg = $("formatSeg");
+  const quality = $("quality");
+  const qualityOut = $("qualityOut");
+  const qualityLabel = $("qualityLabel");
+  const qualityHelp = $("qualityHelp");
+  const resizeToggle = $("resizeToggle");
+  const resizeInputs = $("resizeInputs");
+  const resizeUnit = $("resizeUnit");
+  const pxFields = $("pxFields");
+  const pctFields = $("pctFields");
+  const resizePct = $("resizePct");
+  const maxW = $("maxW");
+  const maxH = $("maxH");
+  const reprocessBtn = $("reprocessBtn");
+  const lossyRow = $("lossyRow");
+  const lossyToggle = $("lossyToggle");
+  const lossyLabel = $("lossyLabel");
+  const stripToggle = $("stripToggle");
+  const stripLabel = $("stripLabel");
+  const formatNote = $("formatNote");
+  const progress = $("progress");
+  const progressFill = $("progressFill");
+  const progressText = $("progressText");
+  const cancelBtn = $("cancelBtn");
+  const itemsEl = $("items");
+  const summary = $("summary");
+  const totalSaved = $("totalSaved");
+  const totalPct = $("totalPct");
+  const toastEl = $("toast");
+
+  /* ----------------------------------------------------------- App state */
+  // Options are intentionally NOT persisted — reloading the page resets these
+  // to their defaults.
+  const state = {
+    format: "original",  // "original" keeps each image's own format
+    allowLossy: true,    // on = lossy where the format supports it (smaller files)
+    lossyQuality: 75,     // 0–100, used for lossy encodes
+    effort: 3,            // 1–6, used for lossless encodes (oxipng level / webp method / avif speed)
+    resize: false,
+    resizeUnit: "px",     // "px" | "percent"
+    maxW: 2000,
+    maxH: 2000,
+    resizePct: 50,
+    strip: false,
+  };
+  // Formats that can be either lossless or lossy (JPEG is always lossy → no toggle).
+  const LOSSLESS_CAPABLE = { png: true, webp: true, avif: true };
+
+  // Each queued image is an object in this list. `id` is a stable key.
+  let nextId = 1;
+  const queue = [];
+
+  /* ----------------------------------------------------------- Utilities */
+  function fmtBytes(n) {
+    if (n < 1024) return n + " B";
+    if (n < 1024 * 1024) return (n / 1024).toFixed(n < 10 * 1024 ? 1 : 0) + " KB";
+    return (n / (1024 * 1024)).toFixed(2) + " MB";
+  }
+
+  function toast(msg) {
+    toastEl.textContent = msg;
+    toastEl.classList.add("show");
+    clearTimeout(toast._t);
+    toast._t = setTimeout(() => toastEl.classList.remove("show"), 1800);
+  }
+
+  const EXT = { webp: "webp", jpeg: "jpg", png: "png", avif: "avif" };
+  const FORMAT_LABEL = { webp: "WebP", jpeg: "JPEG", png: "PNG", avif: "AVIF", original: "Original" };
+  const MIME = { webp: "image/webp", jpeg: "image/jpeg", png: "image/png", avif: "image/avif" };
+
+  function outName(originalName, format) {
+    const base = (originalName || "image").replace(/\.[^.]+$/, "");
+    return `${base}.${EXT[format]}`;
+  }
+
+  // Formats we can re-embed EXIF into with our own metadata module.
+  const META_CAPABLE = { jpeg: true, png: true, webp: true, avif: false };
+
+  // Map an input MIME type to one of our encoder keys (for "Original" mode).
+  // Anything we can't encode back to natively (gif, bmp, svg, pasted-with-no-type…)
+  // falls back to WebP.
+  const MIME_TO_FORMAT = {
+    "image/jpeg": "jpeg", "image/jpg": "jpeg", "image/png": "png",
+    "image/webp": "webp", "image/avif": "avif",
+  };
+  function resolveFormat(item) {
+    if (state.format !== "original") return state.format;
+    return MIME_TO_FORMAT[(item.file.type || "").toLowerCase()] || "webp";
+  }
+
+  // True when the current format encodes losslessly (so the slider is "effort").
+  // JPEG and Original always use the Quality slider.
+  function currentIsLossless() {
+    return LOSSLESS_CAPABLE[state.format] && !state.allowLossy;
+  }
+
+  /* --------------------------------------------------------- Format UI */
+  function refreshFormatUI() {
+    // Highlight the active format button.
+    formatSeg.querySelectorAll("button").forEach((b) => {
+      b.setAttribute("aria-pressed", String(b.dataset.format === state.format));
+    });
+
+    // Lossless encodes expose an "effort" slider (1–6); lossy ones a 0–100 "quality".
+    if (currentIsLossless()) {
+      quality.min = 1; quality.max = 6; quality.step = 1;
+      quality.value = state.effort;
+      qualityLabel.textContent = t("effort_label");
+      qualityHelp.textContent = t("effort_help").replace("{format}", FORMAT_LABEL[state.format] || state.format);
+    } else {
+      quality.min = 0; quality.max = 100; quality.step = 1;
+      quality.value = state.lossyQuality;
+      qualityLabel.textContent = t("quality_label");
+      qualityHelp.textContent = t("quality_help");
+    }
+    qualityOut.textContent = quality.value;
+
+    // "Allow lossy optimization" — only meaningful where a lossless option exists.
+    // The translated label contains a {lossy} token that becomes a Wikipedia link.
+    const showLossy = LOSSLESS_CAPABLE[state.format] || state.format === "original";
+    lossyRow.hidden = !showLossy;
+    lossyToggle.checked = state.allowLossy;
+    lossyLabel.innerHTML = linkifyToken(t("lossy_toggle"), "{lossy}", t("lossy_word"), t("lossy_wiki_url"));
+
+    // The {exif} token in the strip-metadata label becomes a link to the Wikipedia article.
+    stripLabel.innerHTML = linkifyToken(t("strip_toggle"), "{exif}", t("exif_word"), t("exif_wiki_url"));
+
+    formatNote.textContent = state.format === "original" ? t("format_original_note") : "";
+  }
+
+  // Replace a placeholder token in a translated string with an external link whose visible
+  // text is `word`. Everything around the token is HTML-escaped. Works in any language
+  // because the token (not an English word) marks where the link goes.
+  function linkifyToken(text, token, word, url) {
+    const idx = text.indexOf(token);
+    const link = `<a href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(word)}</a>`;
+    if (idx === -1) return escapeHtml(text);
+    return escapeHtml(text.slice(0, idx)) + link + escapeHtml(text.slice(idx + token.length));
+  }
+
+  /* ----------------------------------------------------- Add / read files */
+  async function addFiles(fileList) {
+    const files = [...fileList].filter((f) => f && f.type && f.type.startsWith("image/"));
+    if (!files.length) return;
+    for (const file of files) {
+      const item = {
+        id: nextId++,
+        file,
+        name: file.name || "pasted-image",
+        originalSize: file.size,
+        status: "pending",
+        width: 0, height: 0,
+        outBuffer: null, outSize: 0, outUrl: null,
+        error: null,
+        el: null,
+      };
+      queue.push(item);
+      renderItem(item);
+    }
+    summary.classList.add("show");
+    processAll();
+  }
+
+  /* -------------------------------------------------- Decode to ImageData */
+  // Given a source's natural dimensions, compute the target draw size based on
+  // the current resize settings. Pixel mode fits within a W×H box (never upscales);
+  // percent mode scales by a straight multiplier.
+  function computeTarget(w, h) {
+    if (!state.resize) return { w, h };
+    if (state.resizeUnit === "percent") {
+      const s = Math.max(0.01, state.resizePct / 100);
+      return { w: Math.max(1, Math.round(w * s)), h: Math.max(1, Math.round(h * s)) };
+    }
+    const scale = Math.min(1, state.maxW / w, state.maxH / h);
+    return { w: Math.max(1, Math.round(w * scale)), h: Math.max(1, Math.round(h * scale)) };
+  }
+
+  // Decode any browser-supported image to raw RGBA pixels via canvas.
+  // This also (intentionally) drops embedded metadata; we re-inject EXIF later
+  // if the user chose to keep it.
+  async function decodeToImageData(item) {
+    const bitmap = await createImageBitmap(item.file);
+    item.naturalWidth = bitmap.width;
+    item.naturalHeight = bitmap.height;
+    const { w: width, h: height } = computeTarget(bitmap.width, bitmap.height);
+
+    const canvas = document.createElement("canvas");
+    canvas.width = width; canvas.height = height;
+    const ctx = canvas.getContext("2d", { willReadFrequently: true });
+    ctx.drawImage(bitmap, 0, 0, width, height);
+    bitmap.close && bitmap.close();
+    return ctx.getImageData(0, 0, width, height);
+  }
+
+  /* --------------------------------------------------- Codec worker pool */
+  // The jSquash codecs live in the sibling codecs/ folder and are loaded lazily —
+  // the pool (and thus the bundle + WASM) is created only on the first optimize.
+  // Encoding runs in a module Web Worker when available (keeping the UI responsive
+  // and Cancel clickable), else on the main thread via a dynamic import fallback.
+  const CODEC_URL = new URL("mit-codecs.min.js", document.baseURI);
+  class CodecPool {
+    constructor() {
+      this.jobs = new Map();
+      this.nextId = 1;
+      this.ready = this._init();
+    }
+    async _init() {
+      try {
+        if (typeof Worker === "undefined") throw new Error("Workers unavailable");
+        const worker = new Worker(CODEC_URL, { type: "module" });
+        await new Promise((resolve, reject) => {
+          const to = setTimeout(() => reject(new Error("worker load timeout")), 20000);
+          worker.onerror = (e) => { clearTimeout(to); reject(e.error || new Error("worker error")); };
+          worker.onmessage = (e) => {
+            if (e.data && e.data.type === "ready") { clearTimeout(to); resolve(); return; }
+            this._onMessage(e.data);
+          };
+        });
+        this.worker = worker;
+        this.mode = "worker";
+      } catch (_) {
+        // Fallback: import the same module on the main thread (blocks, but works).
+        this.mode = "main";
+        await import(CODEC_URL.href); // sets window.MITCodecs
+      }
+    }
+    _onMessage(data) {
+      if (!data || data.id == null) return;
+      const job = this.jobs.get(data.id);
+      if (!job) return;
+      this.jobs.delete(data.id);
+      if (data.type === "result") job.resolve(data.buffer);
+      else job.reject(new Error(data.message || "encode failed"));
+    }
+    async encode(format, imageData, opts) {
+      await this.ready;
+      if (this.mode === "main") return window.MITCodecs.encode(format, imageData, opts);
+      const id = this.nextId++;
+      const buffer = imageData.data.buffer; // transferred to the worker
+      return new Promise((resolve, reject) => {
+        this.jobs.set(id, { resolve, reject });
+        this.worker.postMessage(
+          { type: "encode", id, format, data: buffer, width: imageData.width, height: imageData.height, opts },
+          [buffer]
+        );
+      });
+    }
+  }
+  // Created on first use so nothing codec-related downloads until you optimize.
+  let codecPool = null;
+  const getCodecPool = () => (codecPool ||= new CodecPool());
+
+  // Per-image encode options, honoring the format's lossy/lossless capability.
+  function encodeOptsFor(format) {
+    const lossy = format === "jpeg" ? true : (LOSSLESS_CAPABLE[format] ? state.allowLossy : true);
+    return { lossy, quality: state.lossyQuality, effort: state.effort };
+  }
+
+  /* ------------------------------------------------------- Processing loop */
+  // "pending" is the marker for "needs encoding": new files start pending, Reprocess
+  // resets items to pending, cancelled items become "canceled" (not pending). The loop
+  // re-scans the queue between batches so images ADDED while a batch is running still
+  // get picked up instead of being silently dropped.
+  let processing = false;
+  let cancelRequested = false;
+
+  async function processAll() {
+    if (processing) return; // an active run will drain any newly-pending items
+    processing = true;
+    cancelRequested = false;
+    try {
+      while (!cancelRequested) {
+        const pending = queue.filter((q) => q.status === "pending");
+        if (!pending.length) break;
+        showProgress();
+        let done = 0;
+        for (const item of pending) {
+          if (cancelRequested) break;
+          updateProgress(done, pending.length);
+          await processItem(item);
+          done++;
+        }
+      }
+    } finally {
+      if (cancelRequested) {
+        for (const it of queue) {
+          if (it.status === "pending" || it.status === "decoding" || it.status === "optimizing") {
+            it.status = "canceled"; renderItem(it);
+          }
+        }
+        dirty = true;
+        updateReprocessBtn();
+      }
+      hideProgress();
+      processing = false;
+      updateSummary();
+    }
+  }
+
+  async function processItem(item) {
+    // Resolve the concrete encoder for this image (matters in "Original" mode).
+    const format = resolveFormat(item);
+    const opts = encodeOptsFor(format);
+    try {
+      setStatus(item, "decoding");
+      const imageData = await decodeToImageData(item);
+      item.width = imageData.width;
+      item.height = imageData.height;
+
+      setStatus(item, "optimizing");
+      let buf = await getCodecPool().encode(format, imageData, opts);
+      if (cancelRequested) return; // discard result if the batch was canceled mid-encode
+
+      // Re-embed EXIF from the source unless the user asked to strip it.
+      if (!state.strip && META_CAPABLE[format]) {
+        try {
+          const srcBytes = new Uint8Array(await item.file.arrayBuffer());
+          const tiff = MITMeta.extractExifTiff(srcBytes, item.file.type);
+          if (tiff) buf = MITMeta.injectExif(new Uint8Array(buf), tiff, format).buffer;
+        } catch (_) { /* metadata is best-effort; ignore failures */ }
+      }
+
+      // Always keep the processed output — even if it ended up larger. This lets the
+      // app be used to convert formats or enlarge images; the size delta (which may be
+      // a gain or an increase) is shown honestly in the UI.
+      finalizeItem(item, buf, format);
+    } catch (err) {
+      item.status = "error";
+      item.error = (err && err.message) || String(err);
+      renderItem(item);
+    }
+  }
+
+  /* ----------------------------------------------------------- Progress */
+  function showProgress() { progress.hidden = false; }
+  function hideProgress() { progress.hidden = true; progressFill.style.width = "0%"; }
+  function updateProgress(done, total) {
+    progressFill.style.width = total ? Math.round((done / total) * 100) + "%" : "0%";
+    progressText.textContent = done < total
+      ? t("progress_of").replace("{i}", done + 1).replace("{n}", total)
+      : "";
+  }
+
+  function finalizeItem(item, buf, format) {
+    if (item.outUrl) URL.revokeObjectURL(item.outUrl);
+    item.outBuffer = buf;
+    item.outSize = buf.byteLength;
+    item.outFormat = format;
+    item.outFilename = outName(item.name, format);
+    const blob = new Blob([buf], { type: MIME[format] });
+    item.outUrl = URL.createObjectURL(blob);
+    item.status = "done";
+    renderItem(item);
+  }
+
+  function setStatus(item, status) {
+    item.status = status;
+    renderItem(item);
+  }
+
+  /* --------------------------------------------------------- Rendering */
+  function renderItem(item) {
+    let el = item.el;
+    if (!el) {
+      el = document.createElement("div");
+      el.className = "item";
+      el.dataset.id = item.id;
+      item.el = el;
+      itemsEl.appendChild(el);
+    }
+
+    const busy = item.status === "decoding" || item.status === "optimizing" || item.status === "pending";
+    const statusLabel = {
+      pending: t("preparing"), decoding: t("decoding"), optimizing: t("optimizing"),
+    }[item.status] || "";
+
+    // Savings math and the size line. The output is always kept, so the badge shows a
+    // gain (−X%, green) or an increase (+X%, amber) honestly.
+    let sizeLine;
+    if (item.status === "done") {
+      const saved = item.originalSize - item.outSize;
+      const pct = item.originalSize ? Math.round((saved / item.originalSize) * 100) : 0;
+      const badge = saved >= 0
+        ? `<span class="badge">−${pct}%</span>`
+        : `<span class="badge up">+${Math.abs(pct)}%</span>`;
+      sizeLine = `<span class="from">${fmtBytes(item.originalSize)}</span> <span class="to">${fmtBytes(item.outSize)}</span> ${badge}`;
+    } else if (item.status === "error") {
+      sizeLine = `<span class="from">${fmtBytes(item.originalSize)}</span> <span class="err">${t("failed")}: ${escapeHtml(item.error || "")}</span>`;
+    } else if (item.status === "canceled") {
+      sizeLine = `<span class="from" style="text-decoration:none">${fmtBytes(item.originalSize)}</span> <span class="badge busy">${t("canceled")}</span>`;
+    } else {
+      sizeLine = `<span class="from" style="text-decoration:none">${fmtBytes(item.originalSize)}</span> <span class="badge busy"><span class="spinner" aria-hidden="true"></span> ${statusLabel}</span>`;
+    }
+
+    // Bar only visualizes an actual reduction.
+    const showBar = item.status === "done" && item.outSize < item.originalSize;
+    const barPct = showBar
+      ? Math.max(0, Math.min(100, Math.round((item.outSize / item.originalSize) * 100)))
+      : 100;
+
+    const thumbSrc = item.outUrl || "";
+    el.innerHTML = `
+      <img class="thumb" alt="${escapeHtml(item.name)}" ${thumbSrc ? `src="${thumbSrc}"` : ""}>
+      <div class="meta">
+        <div class="name" title="${escapeHtml(item.name)}">${escapeHtml(item.name)}</div>
+        <div class="dims">${dimsText(item)}</div>
+        <div class="sizes">${sizeLine}</div>
+        ${showBar ? `<div class="bar"><i style="width:${barPct}%"></i></div>` : ""}
+      </div>
+      <div class="side">
+        ${item.status === "done"
+          ? `<a class="icon-btn" href="${item.outUrl}" download="${escapeHtml(item.outFilename)}">
+               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0 4-4m-4 4-4-4"/><path d="M5 21h14"/></svg>
+               ${t("download")}
+             </a>`
+          : ""}
+        <button class="icon-btn remove" type="button" aria-label="${t("remove")}: ${escapeHtml(item.name)}">✕</button>
+      </div>`;
+
+    el.querySelector(".remove").addEventListener("click", () => removeItem(item.id));
+  }
+
+  // Dimension line for an item. When the image was resized, show "before → after";
+  // for an untouched ("no gain") result the served file is the original, so show its
+  // natural size only.
+  function dimsText(item) {
+    const nw = item.naturalWidth, nh = item.naturalHeight;
+    const ow = item.width, oh = item.height;
+    if (nw && nh && ow && oh && (nw !== ow || nh !== oh)) {
+      return `${nw} × ${nh} → ${ow} × ${oh} px`;
+    }
+    if (ow && oh) return `${ow} × ${oh} px`;
+    if (nw && nh) return `${nw} × ${nh} px`;
+    return "";
+  }
+
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, (c) =>
+      ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  }
+
+  function removeItem(id) {
+    const idx = queue.findIndex((q) => q.id === id);
+    if (idx < 0) return;
+    const [item] = queue.splice(idx, 1);
+    if (item.outUrl) URL.revokeObjectURL(item.outUrl);
+    if (item.el) item.el.remove();
+    updateSummary();
+    if (!queue.length) summary.classList.remove("show");
+  }
+
+  function updateSummary() {
+    const done = queue.filter((q) => q.status === "done");
+    if (!done.length) { totalSaved.textContent = "—"; totalPct.textContent = "—"; return; }
+    const origTotal = done.reduce((a, q) => a + q.originalSize, 0);
+    const outTotal = done.reduce((a, q) => a + q.outSize, 0);
+    const saved = origTotal - outTotal;
+    const pct = origTotal ? Math.round((saved / origTotal) * 100) : 0;
+    totalSaved.textContent = (saved >= 0 ? "" : "+") + fmtBytes(Math.abs(saved));
+    totalPct.textContent = (saved >= 0 ? "−" : "+") + Math.abs(pct) + "%";
+    totalPct.className = "badge" + (saved >= 0 ? "" : " up");
+  }
+
+  /* -------------------------------------------------- Re-process on change */
+  // Results only refresh when the user clicks "Reprocess". Option changes mark
+  // the current results as stale and enable that button.
+  let dirty = false;
+  function markDirty() {
+    if (!queue.length) return;      // nothing to reprocess yet
+    dirty = true;
+    updateReprocessBtn();
+  }
+  function updateReprocessBtn() {
+    reprocessBtn.disabled = !(dirty && queue.length);
+  }
+
+  function reprocessAll() {
+    for (const item of queue) {
+      if (item.status === "error") item.error = null;
+      item.status = "pending";
+      if (item.outUrl) { URL.revokeObjectURL(item.outUrl); item.outUrl = null; }
+      item.outBuffer = null;
+      renderItem(item);
+    }
+    dirty = false;
+    updateReprocessBtn();
+    processAll();
+  }
+
+  /* ---------------------------------------------------------- ZIP (STORE) */
+  // Minimal ZIP writer (no compression — images are already compressed).
+  // Implements the classic local-file-header + central-directory layout.
+  const MITZip = (() => {
+    // Precomputed CRC-32 table.
+    const CRC_TABLE = (() => {
+      const table = new Uint32Array(256);
+      for (let n = 0; n < 256; n++) {
+        let c = n;
+        for (let k = 0; k < 8; k++) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1;
+        table[n] = c >>> 0;
+      }
+      return table;
+    })();
+    function crc32(bytes) {
+      let c = 0xffffffff;
+      for (let i = 0; i < bytes.length; i++) c = CRC_TABLE[(c ^ bytes[i]) & 0xff] ^ (c >>> 8);
+      return (c ^ 0xffffffff) >>> 0;
+    }
+    const enc = new TextEncoder();
+
+    function build(files) {
+      // files: [{ name, data(Uint8Array) }]
+      const chunks = [];
+      const central = [];
+      let offset = 0;
+
+      for (const f of files) {
+        const nameBytes = enc.encode(f.name);
+        const crc = crc32(f.data);
+        const size = f.data.length;
+
+        // Local file header (30 bytes + name).
+        const lh = new DataView(new ArrayBuffer(30));
+        lh.setUint32(0, 0x04034b50, true);   // signature
+        lh.setUint16(4, 20, true);           // version needed
+        lh.setUint16(6, 0x0800, true);       // flags: UTF-8 names
+        lh.setUint16(8, 0, true);            // method: 0 = store
+        lh.setUint16(10, 0, true);           // mod time
+        lh.setUint16(12, 0, true);           // mod date
+        lh.setUint32(14, crc, true);
+        lh.setUint32(18, size, true);        // compressed size
+        lh.setUint32(22, size, true);        // uncompressed size
+        lh.setUint16(26, nameBytes.length, true);
+        lh.setUint16(28, 0, true);           // extra length
+        chunks.push(new Uint8Array(lh.buffer), nameBytes, f.data);
+
+        // Central directory header (46 bytes + name).
+        const ch = new DataView(new ArrayBuffer(46));
+        ch.setUint32(0, 0x02014b50, true);
+        ch.setUint16(4, 20, true);           // version made by
+        ch.setUint16(6, 20, true);           // version needed
+        ch.setUint16(8, 0x0800, true);       // flags
+        ch.setUint16(10, 0, true);           // method
+        ch.setUint16(12, 0, true);
+        ch.setUint16(14, 0, true);
+        ch.setUint32(16, crc, true);
+        ch.setUint32(20, size, true);
+        ch.setUint32(24, size, true);
+        ch.setUint16(28, nameBytes.length, true);
+        ch.setUint16(30, 0, true);           // extra
+        ch.setUint16(32, 0, true);           // comment
+        ch.setUint16(34, 0, true);           // disk number
+        ch.setUint16(36, 0, true);           // internal attrs
+        ch.setUint32(38, 0, true);           // external attrs
+        ch.setUint32(42, offset, true);      // local header offset
+        central.push(new Uint8Array(ch.buffer), nameBytes);
+
+        offset += 30 + nameBytes.length + size;
+      }
+
+      const centralSize = central.reduce((a, c) => a + c.length, 0);
+      const centralOffset = offset;
+
+      // End of central directory record (22 bytes).
+      const eo = new DataView(new ArrayBuffer(22));
+      eo.setUint32(0, 0x06054b50, true);
+      eo.setUint16(8, files.length, true);
+      eo.setUint16(10, files.length, true);
+      eo.setUint32(12, centralSize, true);
+      eo.setUint32(16, centralOffset, true);
+
+      return new Blob([...chunks, ...central, new Uint8Array(eo.buffer)], { type: "application/zip" });
+    }
+    return { build };
+  })();
+
+  // Assign each finished item a unique download filename (handles collisions).
+  function uniqueNamedFiles() {
+    const done = queue.filter((q) => q.status === "done" && q.outBuffer);
+    const seen = new Map();
+    return done.map((q) => {
+      let name = q.outFilename;
+      if (seen.has(name)) {
+        const n = seen.get(name) + 1; seen.set(name, n);
+        name = name.replace(/(\.[^.]+)$/, `-${n}$1`);
+      } else { seen.set(name, 1); }
+      return { name, url: q.outUrl, data: new Uint8Array(q.outBuffer) };
+    });
+  }
+
+  function triggerDownload(url, filename) {
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a); a.click(); a.remove();
+  }
+
+  function downloadZip() {
+    const files = uniqueNamedFiles();
+    if (!files.length) return;
+    const blob = MITZip.build(files);
+    const url = URL.createObjectURL(blob);
+    triggerDownload(url, "make-it-tiny.zip");
+    setTimeout(() => URL.revokeObjectURL(url), 4000);
+  }
+
+  // Download every finished image as its own file. Browsers throttle rapid
+  // programmatic downloads, so we stagger them slightly.
+  async function downloadSeparate() {
+    const files = uniqueNamedFiles();
+    if (!files.length) return;
+    for (let i = 0; i < files.length; i++) {
+      triggerDownload(files[i].url, files[i].name);
+      if (i < files.length - 1) await new Promise((r) => setTimeout(r, 180));
+    }
+  }
+
+  /* --------------------------------------------------------- Event wiring */
+  // Drop zone: click, keyboard, drag/drop.
+  dropzone.addEventListener("click", () => fileInput.click());
+  dropzone.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" || e.key === " ") { e.preventDefault(); fileInput.click(); }
+  });
+  fileInput.addEventListener("change", () => { addFiles(fileInput.files); fileInput.value = ""; });
+
+  ["dragenter", "dragover"].forEach((ev) =>
+    dropzone.addEventListener(ev, (e) => { e.preventDefault(); dropzone.classList.add("drag"); }));
+  ["dragleave", "drop"].forEach((ev) =>
+    dropzone.addEventListener(ev, (e) => { e.preventDefault(); if (ev === "drop" || e.target === dropzone) dropzone.classList.remove("drag"); }));
+  dropzone.addEventListener("drop", (e) => {
+    if (e.dataTransfer && e.dataTransfer.files.length) addFiles(e.dataTransfer.files);
+  });
+
+  // Paste images anywhere on the page.
+  window.addEventListener("paste", (e) => {
+    const items = e.clipboardData && e.clipboardData.items;
+    if (!items) return;
+    const files = [];
+    for (const it of items) if (it.kind === "file") { const f = it.getAsFile(); if (f) files.push(f); }
+    if (files.length) { e.preventDefault(); addFiles(files); }
+  });
+
+  // Format buttons.
+  formatSeg.addEventListener("click", (e) => {
+    const btn = e.target.closest("button[data-format]");
+    if (!btn) return;
+    state.format = btn.dataset.format;
+    refreshFormatUI();
+    markDirty();
+  });
+
+  // Quality / effort slider (which one depends on the current lossless mode).
+  quality.addEventListener("input", () => {
+    qualityOut.textContent = quality.value;
+    if (currentIsLossless()) state.effort = +quality.value;
+    else state.lossyQuality = +quality.value;
+    markDirty();
+  });
+
+  // Allow lossy optimization.
+  lossyToggle.addEventListener("change", () => {
+    state.allowLossy = lossyToggle.checked;
+    refreshFormatUI();
+    markDirty();
+  });
+
+  // Resize controls.
+  function syncResizeFields() {
+    pxFields.hidden = state.resizeUnit !== "px";
+    pctFields.hidden = state.resizeUnit !== "percent";
+  }
+  resizeToggle.addEventListener("change", () => {
+    state.resize = resizeToggle.checked;
+    resizeInputs.classList.toggle("disabled", !state.resize);
+    // When enabling, seed the box from the first loaded image's dimensions.
+    if (state.resize) {
+      const ref = queue.find((q) => q.naturalWidth && q.naturalHeight);
+      if (ref) {
+        state.maxW = ref.naturalWidth;
+        state.maxH = ref.naturalHeight;
+        maxW.value = state.maxW; maxH.value = state.maxH;
+      }
+    }
+    markDirty();
+  });
+  resizeUnit.addEventListener("change", () => {
+    state.resizeUnit = resizeUnit.value;
+    syncResizeFields();
+    markDirty();
+  });
+  // Width and height are independent max bounds — changing one leaves the other alone.
+  // (Each image still scales to fit within the box, preserving its own aspect ratio.)
+  maxW.addEventListener("input", () => {
+    state.maxW = Math.max(1, +maxW.value || 0);
+    markDirty();
+  });
+  maxH.addEventListener("input", () => {
+    state.maxH = Math.max(1, +maxH.value || 0);
+    markDirty();
+  });
+  resizePct.addEventListener("input", () => {
+    state.resizePct = Math.max(1, +resizePct.value || 0);
+    markDirty();
+  });
+
+  // Select the whole value when a size field gains focus, so typing replaces it.
+  // (Chrome collapses the selection on the mouseup after focus, so guard that click.)
+  function selectAllOnFocus(el) {
+    el.addEventListener("focus", () => el.select());
+    el.addEventListener("mousedown", () => { el._selectPending = document.activeElement !== el; });
+    el.addEventListener("mouseup", (e) => {
+      if (el._selectPending) { e.preventDefault(); el.select(); el._selectPending = false; }
+    });
+  }
+  [maxW, maxH, resizePct].forEach(selectAllOnFocus);
+
+  // Strip metadata.
+  stripToggle.addEventListener("change", () => {
+    state.strip = stripToggle.checked;
+    refreshFormatUI();
+    markDirty();
+  });
+
+  // Reprocess & cancel.
+  reprocessBtn.addEventListener("click", reprocessAll);
+  cancelBtn.addEventListener("click", () => { cancelRequested = true; });
+
+  // Summary actions.
+  $("downloadZip").addEventListener("click", downloadZip);
+  $("downloadSeparate").addEventListener("click", downloadSeparate);
+  $("clearAll").addEventListener("click", () => {
+    for (const q of queue) if (q.outUrl) URL.revokeObjectURL(q.outUrl);
+    queue.length = 0;
+    itemsEl.innerHTML = "";
+    summary.classList.remove("show");
+    dirty = false;
+    updateReprocessBtn();
+  });
+
+  // Share button: copy a social-media-ready description.
+  $("shareBtn").addEventListener("click", async () => {
+    const text = t("share_text");
+    try {
+      if (navigator.share && /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent)) {
+        await navigator.share({ title: "Make It Tiny", text });
+      } else {
+        await navigator.clipboard.writeText(text);
+        toast(t("copied"));
+      }
+    } catch (_) {
+      try { await navigator.clipboard.writeText(text); toast(t("copied")); } catch (__) {}
+    }
+  });
+
+  // Language dropdown (English only for now).
+  $("lang").addEventListener("change", (e) => { lang = e.target.value; applyI18n(); });
+
+  /* ----------------------------------------------------- Initialize UI */
+  // (The codec pool is created lazily on the first optimize — see getCodecPool.)
+
+  // Reflect defaults into the controls.
+  resizeToggle.checked = state.resize;
+  resizeInputs.classList.toggle("disabled", !state.resize);
+  resizeUnit.value = state.resizeUnit;
+  maxW.value = state.maxW;
+  maxH.value = state.maxH;
+  resizePct.value = state.resizePct;
+  syncResizeFields();
+  stripToggle.checked = state.strip;
+  lossyToggle.checked = state.allowLossy;
+  updateReprocessBtn();
+  // Build the language dropdown (flag + native name) and select the active language.
+  $("lang").innerHTML = LANGS
+    .map(([code, flag, name]) => `<option value="${code}">${flag} ${escapeHtml(name)}</option>`)
+    .join("");
+  $("lang").value = lang;
+  applyI18n();
+})();
+</script>
+
+<!-- ============================================================================
+     Metadata (EXIF) preservation module. Extracts the raw TIFF/EXIF block from
+     the source image and re-injects it into the optimized output when the user
+     chooses to keep metadata. Kept separate from the app logic for clarity.
+============================================================================ -->
+<script>
+"use strict";
+window.MITMeta = (function () {
+  // ---- Extraction -----------------------------------------------------------
+  // Returns the raw TIFF block (starting with "II"/"MM"), or null.
+  function extractExifTiff(bytes, mime) {
+    try {
+      if (mime === "image/jpeg" || (bytes[0] === 0xff && bytes[1] === 0xd8)) return fromJpeg(bytes);
+      if (mime === "image/png" || isPng(bytes)) return fromPng(bytes);
+      if (mime === "image/webp" || isWebp(bytes)) return fromWebp(bytes);
+    } catch (_) {}
+    return null;
+  }
+
+  function isPng(b) { return b[0] === 0x89 && b[1] === 0x50 && b[2] === 0x4e && b[3] === 0x47; }
+  function isWebp(b) { return b[0] === 0x52 && b[1] === 0x49 && b[2] === 0x46 && b[3] === 0x46 &&
+                              b[8] === 0x57 && b[9] === 0x45 && b[10] === 0x42 && b[11] === 0x50; }
+
+  function fromJpeg(b) {
+    let p = 2; // skip SOI
+    while (p + 4 < b.length) {
+      if (b[p] !== 0xff) break;
+      const marker = b[p + 1];
+      if (marker === 0xd9 || marker === 0xda) break; // EOI / start of scan
+      const len = (b[p + 2] << 8) | b[p + 3];
+      if (marker === 0xe1) { // APP1
+        const s = p + 4;
+        // Expect "Exif\0\0" then TIFF.
+        if (b[s] === 0x45 && b[s + 1] === 0x78 && b[s + 2] === 0x69 && b[s + 3] === 0x66 &&
+            b[s + 4] === 0x00 && b[s + 5] === 0x00) {
+          return b.slice(s + 6, p + 2 + len);
+        }
+      }
+      p += 2 + len;
+    }
+    return null;
+  }
+
+  function fromPng(b) {
+    let p = 8; // skip signature
+    const dv = new DataView(b.buffer, b.byteOffset, b.byteLength);
+    while (p + 8 <= b.length) {
+      const len = dv.getUint32(p);
+      const type = String.fromCharCode(b[p + 4], b[p + 5], b[p + 6], b[p + 7]);
+      if (type === "eXIf") return b.slice(p + 8, p + 8 + len);
+      if (type === "IEND") break;
+      p += 12 + len; // length + type + data + crc
+    }
+    return null;
+  }
+
+  function fromWebp(b) {
+    let p = 12; // skip RIFF header + "WEBP"
+    const dv = new DataView(b.buffer, b.byteOffset, b.byteLength);
+    while (p + 8 <= b.length) {
+      const fourcc = String.fromCharCode(b[p], b[p + 1], b[p + 2], b[p + 3]);
+      const size = dv.getUint32(p + 4, true);
+      if (fourcc === "EXIF") {
+        let start = p + 8;
+        // Some encoders prefix "Exif\0\0"; strip it if present.
+        if (b[start] === 0x45 && b[start + 1] === 0x78 && b[start + 2] === 0x69 &&
+            b[start + 3] === 0x66 && b[start + 4] === 0x00 && b[start + 5] === 0x00) start += 6;
+        return b.slice(start, p + 8 + size);
+      }
+      p += 8 + size + (size & 1); // chunks are padded to even size
+    }
+    return null;
+  }
+
+  // ---- Injection ------------------------------------------------------------
+  function injectExif(out, tiff, format) {
+    if (format === "jpeg") return intoJpeg(out, tiff);
+    if (format === "png") return intoPng(out, tiff);
+    if (format === "webp") return intoWebp(out, tiff);
+    return out;
+  }
+
+  function intoJpeg(out, tiff) {
+    // Build APP1: FF E1, len(2), "Exif\0\0", tiff.
+    const payloadLen = 2 + 6 + tiff.length;
+    if (payloadLen > 0xffff) return out; // too big for a single APP1 segment
+    const seg = new Uint8Array(2 + 2 + 6 + tiff.length);
+    seg[0] = 0xff; seg[1] = 0xe1;
+    seg[2] = (payloadLen >> 8) & 0xff; seg[3] = payloadLen & 0xff;
+    seg.set([0x45, 0x78, 0x69, 0x66, 0x00, 0x00], 4);
+    seg.set(tiff, 10);
+    // Insert right after SOI (first 2 bytes).
+    const result = new Uint8Array(out.length + seg.length);
+    result.set(out.slice(0, 2), 0);
+    result.set(seg, 2);
+    result.set(out.slice(2), 2 + seg.length);
+    return result;
+  }
+
+  const CRC_TABLE = (() => {
+    const table = new Uint32Array(256);
+    for (let n = 0; n < 256; n++) {
+      let c = n;
+      for (let k = 0; k < 8; k++) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1;
+      table[n] = c >>> 0;
+    }
+    return table;
+  })();
+  function crc32(bytes) {
+    let c = 0xffffffff;
+    for (let i = 0; i < bytes.length; i++) c = CRC_TABLE[(c ^ bytes[i]) & 0xff] ^ (c >>> 8);
+    return (c ^ 0xffffffff) >>> 0;
+  }
+
+  function intoPng(out, tiff) {
+    // Build an eXIf chunk and insert it just before IEND.
+    const type = new Uint8Array([0x65, 0x58, 0x49, 0x66]); // "eXIf"
+    const chunk = new Uint8Array(12 + tiff.length);
+    const dv = new DataView(chunk.buffer);
+    dv.setUint32(0, tiff.length);
+    chunk.set(type, 4);
+    chunk.set(tiff, 8);
+    const crcInput = new Uint8Array(4 + tiff.length);
+    crcInput.set(type, 0); crcInput.set(tiff, 4);
+    dv.setUint32(8 + tiff.length, crc32(crcInput));
+
+    // Find IEND (last 12 bytes normally).
+    const iendPos = out.length - 12;
+    const result = new Uint8Array(out.length + chunk.length);
+    result.set(out.slice(0, iendPos), 0);
+    result.set(chunk, iendPos);
+    result.set(out.slice(iendPos), iendPos + chunk.length);
+    return result;
+  }
+
+  function intoWebp(out, tiff) {
+    // Convert a simple WebP (VP8/VP8L/VP8X) into an extended file that carries
+    // an EXIF chunk. We parse the existing chunks, ensure a VP8X header with the
+    // EXIF flag set, then append the EXIF chunk.
+    if (!(out[0] === 0x52 && out[8] === 0x57)) return out; // not RIFF/WEBP
+    const dv = new DataView(out.buffer, out.byteOffset, out.byteLength);
+
+    // Read all chunks after the 12-byte RIFF/WEBP header.
+    const chunks = [];
+    let p = 12;
+    while (p + 8 <= out.length) {
+      const fourcc = String.fromCharCode(out[p], out[p + 1], out[p + 2], out[p + 3]);
+      const size = dv.getUint32(p + 4, true);
+      const data = out.slice(p + 8, p + 8 + size);
+      chunks.push({ fourcc, data });
+      p += 8 + size + (size & 1);
+    }
+
+    // Extract image dimensions to build a valid VP8X header if we need one.
+    let vp8x = chunks.find((c) => c.fourcc === "VP8X");
+    if (!vp8x) {
+      const dims = webpDimensions(chunks);
+      if (!dims) return out; // can't safely build VP8X; leave as-is
+      const d = new Uint8Array(10);
+      const w = dims.width - 1, h = dims.height - 1;
+      d[0] = 0x08; // flags: EXIF present (bit 3)
+      d[4] = w & 0xff; d[5] = (w >> 8) & 0xff; d[6] = (w >> 16) & 0xff;
+      d[7] = h & 0xff; d[8] = (h >> 8) & 0xff; d[9] = (h >> 16) & 0xff;
+      vp8x = { fourcc: "VP8X", data: d };
+      chunks.unshift(vp8x);
+    } else {
+      vp8x.data = vp8x.data.slice();
+      vp8x.data[0] |= 0x08; // set EXIF flag
+    }
+
+    // Add the EXIF chunk (after image data, before any XMP — simplest: append).
+    chunks.push({ fourcc: "EXIF", data: tiff });
+
+    // Reassemble.
+    const parts = [];
+    let bodyLen = 4; // "WEBP"
+    for (const c of chunks) {
+      const header = new Uint8Array(8);
+      header.set([c.fourcc.charCodeAt(0), c.fourcc.charCodeAt(1), c.fourcc.charCodeAt(2), c.fourcc.charCodeAt(3)], 0);
+      new DataView(header.buffer).setUint32(4, c.data.length, true);
+      parts.push(header, c.data);
+      let chunkLen = 8 + c.data.length;
+      if (c.data.length & 1) { parts.push(new Uint8Array(1)); chunkLen += 1; } // pad
+      bodyLen += chunkLen;
+    }
+    const riff = new Uint8Array(12);
+    riff.set([0x52, 0x49, 0x46, 0x46], 0); // "RIFF"
+    new DataView(riff.buffer).setUint32(4, bodyLen, true);
+    riff.set([0x57, 0x45, 0x42, 0x50], 8); // "WEBP"
+
+    const total = 12 + parts.reduce((a, x) => a + x.length, 0);
+    const result = new Uint8Array(total);
+    result.set(riff, 0);
+    let off = 12;
+    for (const x of parts) { result.set(x, off); off += x.length; }
+    return result;
+  }
+
+  function webpDimensions(chunks) {
+    const lossy = chunks.find((c) => c.fourcc === "VP8 ");
+    if (lossy) {
+      const d = lossy.data;
+      // Find start code 0x9d 0x01 0x2a, then 14-bit width/height follow.
+      for (let i = 3; i < d.length - 6; i++) {
+        if (d[i] === 0x9d && d[i + 1] === 0x01 && d[i + 2] === 0x2a) {
+          const width = ((d[i + 4] << 8) | d[i + 3]) & 0x3fff;
+          const height = ((d[i + 6] << 8) | d[i + 5]) & 0x3fff;
+          return { width, height };
+        }
+      }
+    }
+    const lossless = chunks.find((c) => c.fourcc === "VP8L");
+    if (lossless) {
+      const d = lossless.data;
+      if (d[0] !== 0x2f) return null;
+      const bits = d[1] | (d[2] << 8) | (d[3] << 16) | (d[4] << 24);
+      const width = (bits & 0x3fff) + 1;
+      const height = ((bits >> 14) & 0x3fff) + 1;
+      return { width, height };
+    }
+    return null;
+  }
+
+  return { extractExifTiff, injectExif };
+})();
+</script>
+</body>
+</html>
