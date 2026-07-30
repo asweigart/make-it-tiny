@@ -16,6 +16,8 @@ By [Al Sweigart](https://inventwithpython.com).
   percentage.
 - **Strip metadata:** remove EXIF/GPS and other metadata (or keep it — EXIF is
   re-embedded from the source by default).
+- **Gallery:** a before/after comparison view with a draggable slider to judge the
+  quality loss, plus the file-size, dimension, and format changes as stats.
 - **Batch friendly:** add many images at once; download them all as a `.zip` or as
   separate files, reprocess with new settings, or clear the queue.
 - **Add images any way you like:** drag-and-drop, click to choose files, or paste

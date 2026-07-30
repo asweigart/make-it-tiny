@@ -285,6 +285,115 @@ footer.credit a { font-weight: 600; }
   .item .side { grid-column: 1 / -1; flex-direction: row; }
   .item .side .icon-btn { flex: 1; }
 }
+
+/* ================================ Gallery =============================== */
+/* A modal lightbox with a draggable before/after slider so people can see the
+   quality loss for themselves, plus the size/dimension/format stats. */
+.gallery-overlay {
+  position: fixed; inset: 0; z-index: 100;
+  display: flex; align-items: center; justify-content: center;
+  padding: 16px;
+  background: rgba(8, 12, 16, .82);
+}
+.gallery-overlay[hidden] { display: none; }
+.gallery-dialog {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); box-shadow: var(--shadow);
+  width: min(980px, 100%); max-height: 100%;
+  display: flex; flex-direction: column; overflow: hidden;
+}
+.gallery-head {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 16px; border-bottom: 1px solid var(--border);
+}
+.gallery-head .gallery-name {
+  flex: 1 1 auto; min-width: 0; font-weight: 600;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.gallery-count {
+  flex: 0 0 auto; color: var(--text-dim); font-size: .85rem;
+  font-variant-numeric: tabular-nums; white-space: nowrap;
+}
+.gallery-close {
+  flex: 0 0 auto; border: 1px solid var(--border); background: var(--surface-2);
+  color: var(--text); border-radius: 9px; width: 34px; height: 34px;
+  font-size: 1.05rem; line-height: 1; cursor: pointer;
+}
+.gallery-close:hover { border-color: var(--accent); }
+.gallery-stage {
+  display: flex; align-items: center; gap: 10px;
+  padding: 16px; background: var(--surface-2); min-height: 0;
+}
+.gallery-nav {
+  flex: 0 0 auto; border: 1px solid var(--border); background: var(--surface);
+  color: var(--text); border-radius: 50%; width: 40px; height: 40px;
+  font-size: 1.5rem; line-height: 1; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+}
+.gallery-nav:hover:not(:disabled) { border-color: var(--accent); }
+.gallery-nav:disabled { opacity: .3; cursor: not-allowed; }
+.compare-holder { flex: 1 1 auto; min-width: 0; display: flex; align-items: center; justify-content: center; }
+
+/* The compare box shrinks to wrap the (contain-fit) image so the before/after
+   layers line up pixel-for-pixel regardless of aspect ratio. */
+.compare {
+  position: relative; max-width: 100%; user-select: none; touch-action: none;
+  border-radius: 10px; overflow: hidden; line-height: 0;
+  /* checkerboard so transparency is visible behind either layer */
+  background-image:
+    linear-gradient(45deg, var(--border) 25%, transparent 25%),
+    linear-gradient(-45deg, var(--border) 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, var(--border) 75%),
+    linear-gradient(-45deg, transparent 75%, var(--border) 75%);
+  background-size: 20px 20px;
+  background-position: 0 0, 0 10px, 10px -10px, -10px 0;
+}
+.compare-after { display: block; max-width: 100%; max-height: 62vh; width: auto; height: auto; }
+.compare-before-wrap { position: absolute; inset: 0; overflow: hidden; }
+/* object-fit:fill is safe here: before/after share an aspect ratio, so filling the
+   after-image's box aligns them exactly. */
+.compare-before-wrap img { width: 100%; height: 100%; object-fit: fill; }
+.compare-handle {
+  position: absolute; top: 0; bottom: 0; width: 3px; margin-left: -1.5px;
+  background: var(--accent-contrast); box-shadow: 0 0 0 1px rgba(0, 0, 0, .35);
+  cursor: ew-resize;
+}
+.compare-handle::after {
+  content: ""; position: absolute; top: 50%; left: 50%;
+  width: 36px; height: 36px; transform: translate(-50%, -50%); border-radius: 50%;
+  background: var(--accent); border: 2px solid var(--accent-contrast);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, .4);
+}
+.compare-handle::before {
+  content: "⟷"; position: absolute; top: 50%; left: 50%; z-index: 1;
+  transform: translate(-50%, -50%); color: var(--accent-contrast);
+  font-size: .8rem; font-weight: 700; pointer-events: none;
+}
+.compare-tag {
+  position: absolute; top: 10px; padding: 3px 9px; border-radius: 999px;
+  font-size: .74rem; font-weight: 700; line-height: 1.4; color: #fff;
+  background: rgba(8, 12, 16, .68); pointer-events: none;
+}
+.compare-tag.before { left: 10px; }
+.compare-tag.after { right: 10px; }
+.gallery-hint { text-align: center; font-size: .78rem; color: var(--text-dim); padding: 8px 16px 0; }
+.gallery-info {
+  padding: 14px 16px 16px; border-top: 1px solid var(--border);
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 14px;
+}
+.stat-tile { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.stat-tile .stat-key {
+  font-size: .72rem; text-transform: uppercase; letter-spacing: .04em;
+  color: var(--text-dim); font-weight: 700;
+}
+.stat-tile .stat-val { font-size: 1rem; font-weight: 600; font-variant-numeric: tabular-nums; }
+.stat-tile .stat-val s { color: var(--text-dim); font-weight: 400; }
+.stat-tile .badge { align-self: flex-start; margin-top: 3px; }
+@media (max-width: 560px) {
+  .gallery-nav { width: 34px; height: 34px; font-size: 1.25rem; }
+  .gallery-stage { padding: 10px; gap: 6px; }
+  .compare-after { max-height: 52vh; }
+}
 </style>
 </head>
 <body>
@@ -402,6 +511,10 @@ footer.credit a { font-weight: 600; }
       <span id="totalPct" class="badge">—</span>
     </div>
     <div class="actions">
+      <button class="btn" id="galleryBtn" disabled>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M12 3v18"/><circle cx="7.5" cy="8" r="1.2"/><path d="M16 8h2.5"/></svg>
+        <span data-i18n="gallery">Gallery</span>
+      </button>
       <button class="btn primary" id="reprocessBtn" disabled>
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/><path d="M3 21v-5h5"/></svg>
         <span data-i18n="reprocess">Reprocess</span>
@@ -442,6 +555,34 @@ footer.credit a { font-weight: 600; }
 </div>
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<!-- ============================ Gallery (before/after) ============================ -->
+<div class="gallery-overlay" id="gallery" hidden>
+  <div class="gallery-dialog" role="dialog" aria-modal="true" aria-labelledby="galleryName">
+    <div class="gallery-head">
+      <div class="gallery-name" id="galleryName"></div>
+      <span class="gallery-count" id="galleryCount"></span>
+      <button class="gallery-close" id="galleryClose" type="button" aria-label="Close">✕</button>
+    </div>
+    <div class="gallery-stage">
+      <button class="gallery-nav" id="galleryPrev" type="button" aria-label="Previous image">‹</button>
+      <div class="compare-holder">
+        <div class="compare" id="compareBox">
+          <img class="compare-after" id="compareAfter" alt="">
+          <div class="compare-before-wrap" id="compareBeforeWrap">
+            <img id="compareBefore" alt="">
+          </div>
+          <span class="compare-tag before" data-i18n="gallery_before">Before</span>
+          <span class="compare-tag after" data-i18n="gallery_after">After</span>
+          <div class="compare-handle" id="compareHandle"></div>
+        </div>
+      </div>
+      <button class="gallery-nav" id="galleryNext" type="button" aria-label="Next image">›</button>
+    </div>
+    <div class="gallery-hint" id="galleryHint" data-i18n="gallery_hint">Drag the handle to compare quality</div>
+    <div class="gallery-info" id="galleryInfo"></div>
+  </div>
+</div>
 
 <!-- ============================================================================
      The jSquash codecs are NOT embedded here. They live as self-hosted files right
@@ -535,6 +676,20 @@ footer.credit a { font-weight: 600; }
       failed: "Failed",
       copied: "Copied to clipboard!",
       share_text: "Make It Tiny — a free, offline image optimizer. Drag, drop, or paste images to shrink their file size with WebP, JPEG, PNG, or AVIF. Everything runs in your browser; nothing is uploaded. Made by Al Sweigart. https://inventwithpython.com",
+      gallery: "Gallery",
+      gallery_open: "Compare",
+      gallery_title: "Before / after comparison",
+      gallery_close: "Close",
+      gallery_prev: "Previous image",
+      gallery_next: "Next image",
+      gallery_before: "Before",
+      gallery_after: "After",
+      gallery_hint: "Drag the handle to compare quality",
+      gallery_count: "{i} of {n}",
+      gallery_stat_size: "File size",
+      gallery_stat_dims: "Dimensions",
+      gallery_stat_format: "Format",
+      gallery_unchanged: "unchanged",
     },
 
     zh: {
@@ -2377,6 +2532,7 @@ footer.credit a { font-weight: 600; }
   const summary = $("summary");
   const totalSaved = $("totalSaved");
   const totalPct = $("totalPct");
+  const galleryBtn = $("galleryBtn");
   const toastEl = $("toast");
 
   /* ----------------------------------------------------------- App state */
@@ -2774,7 +2930,11 @@ footer.credit a { font-weight: 600; }
       </div>
       <div class="side">
         ${item.status === "done"
-          ? `<a class="icon-btn" href="${item.outUrl}" download="${escapeHtml(item.outFilename)}">
+          ? `<button class="icon-btn compare" type="button" aria-label="${t("gallery_open")}: ${escapeHtml(item.name)}">
+               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M12 4v16"/></svg>
+               ${t("gallery_open")}
+             </button>
+             <a class="icon-btn" href="${item.outUrl}" download="${escapeHtml(item.outFilename)}">
                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0 4-4m-4 4-4-4"/><path d="M5 21h14"/></svg>
                ${t("download")}
              </a>`
@@ -2783,6 +2943,8 @@ footer.credit a { font-weight: 600; }
       </div>`;
 
     el.querySelector(".remove").addEventListener("click", () => removeItem(item.id));
+    const compareBtn = el.querySelector(".compare");
+    if (compareBtn) compareBtn.addEventListener("click", () => Gallery.open(item.id));
   }
 
   // Dimension line for an item. When the image was resized, show "before → after";
@@ -2808,6 +2970,7 @@ footer.credit a { font-weight: 600; }
     const idx = queue.findIndex((q) => q.id === id);
     if (idx < 0) return;
     const [item] = queue.splice(idx, 1);
+    if (Gallery.isOpen()) Gallery.close();  // the browsed snapshot may include this item
     if (item.outUrl) URL.revokeObjectURL(item.outUrl);
     if (item.el) item.el.remove();
     updateSummary();
@@ -2816,6 +2979,7 @@ footer.credit a { font-weight: 600; }
 
   function updateSummary() {
     const done = queue.filter((q) => q.status === "done");
+    galleryBtn.disabled = !done.length;
     if (!done.length) { totalSaved.textContent = "—"; totalPct.textContent = "—"; return; }
     const origTotal = done.reduce((a, q) => a + q.originalSize, 0);
     const outTotal = done.reduce((a, q) => a + q.outSize, 0);
@@ -2840,6 +3004,7 @@ footer.credit a { font-weight: 600; }
   }
 
   function reprocessAll() {
+    Gallery.close();  // output URLs are about to be revoked
     for (const item of queue) {
       if (item.status === "error") item.error = null;
       item.status = "pending";
@@ -2980,6 +3145,165 @@ footer.credit a { font-weight: 600; }
     }
   }
 
+  /* -------------------------------------------------------------- Gallery */
+  // A before/after lightbox. It shows the untouched source behind a draggable
+  // slider revealing the optimized output, so the quality tradeoff is visible
+  // directly, plus the file-size / dimension / format deltas as stats.
+  const Gallery = (() => {
+    const overlay = $("gallery");
+    const nameEl = $("galleryName");
+    const countEl = $("galleryCount");
+    const infoEl = $("galleryInfo");
+    const box = $("compareBox");
+    const afterImg = $("compareAfter");
+    const beforeImg = $("compareBefore");
+    const beforeWrap = $("compareBeforeWrap");
+    const handle = $("compareHandle");
+    const prevBtn = $("galleryPrev");
+    const nextBtn = $("galleryNext");
+
+    let list = [];        // snapshot of the "done" items being browsed
+    let index = 0;
+    let beforeUrl = null; // object URL for the current source image (revoked on change)
+    let pos = 50;         // slider position, 0–100
+
+    // Human label for a source image's own format (before optimization).
+    function sourceFormatLabel(item) {
+      const key = MIME_TO_FORMAT[(item.file.type || "").toLowerCase()];
+      if (key) return FORMAT_LABEL[key];
+      const ext = (item.name.match(/\.([^.]+)$/) || [, ""])[1].toUpperCase();
+      return ext || "—";
+    }
+
+    // Position the handle and clip the "before" layer to reveal it from the left
+    // edge up to the handle.
+    function setSlider(p) {
+      pos = Math.max(0, Math.min(100, p));
+      handle.style.left = pos + "%";
+      beforeWrap.style.clipPath = `inset(0 ${100 - pos}% 0 0)`;
+    }
+
+    function pointerPct(clientX) {
+      const r = box.getBoundingClientRect();
+      if (!r.width) return pos;
+      return ((clientX - r.left) / r.width) * 100;
+    }
+    function onPointerDown(e) {
+      e.preventDefault();
+      if (box.setPointerCapture) box.setPointerCapture(e.pointerId);
+      setSlider(pointerPct(e.clientX));
+      const move = (ev) => setSlider(pointerPct(ev.clientX));
+      const up = () => {
+        box.removeEventListener("pointermove", move);
+        box.removeEventListener("pointerup", up);
+        box.removeEventListener("pointercancel", up);
+      };
+      box.addEventListener("pointermove", move);
+      box.addEventListener("pointerup", up);
+      box.addEventListener("pointercancel", up);
+    }
+
+    function statTile(key, valHtml, badgeHtml) {
+      return `<div class="stat-tile">
+        <span class="stat-key">${escapeHtml(key)}</span>
+        <span class="stat-val">${valHtml}</span>
+        ${badgeHtml || ""}
+      </div>`;
+    }
+
+    function render() {
+      const item = list[index];
+      if (!item) { close(); return; }
+
+      nameEl.textContent = item.name;
+      nameEl.title = item.name;
+      countEl.textContent = t("gallery_count").replace("{i}", index + 1).replace("{n}", list.length);
+      prevBtn.disabled = index <= 0;
+      nextBtn.disabled = index >= list.length - 1;
+
+      // "Before" is the raw source; "after" reuses the output's existing blob URL.
+      if (beforeUrl) URL.revokeObjectURL(beforeUrl);
+      beforeUrl = URL.createObjectURL(item.file);
+      beforeImg.src = beforeUrl;
+      beforeImg.alt = t("gallery_before") + ": " + item.name;
+      afterImg.src = item.outUrl;
+      afterImg.alt = t("gallery_after") + ": " + item.name;
+      setSlider(50);
+
+      // Stats — each showing before → after.
+      const saved = item.originalSize - item.outSize;
+      const pctSize = item.originalSize ? Math.round((saved / item.originalSize) * 100) : 0;
+      const sizeBadge = saved >= 0
+        ? `<span class="badge">−${pctSize}%</span>`
+        : `<span class="badge up">+${Math.abs(pctSize)}%</span>`;
+      const sizeVal = `<s>${fmtBytes(item.originalSize)}</s> → ${fmtBytes(item.outSize)}`;
+
+      const bw = item.naturalWidth, bh = item.naturalHeight;
+      const aw = item.width, ah = item.height;
+      let dimsVal, dimsBadge = "";
+      if (bw && bh && aw && ah && (bw !== aw || bh !== ah)) {
+        dimsVal = `<s>${bw} × ${bh}</s> → ${aw} × ${ah}`;
+        const pctPix = Math.round((1 - (aw * ah) / (bw * bh)) * 100);
+        if (pctPix > 0) dimsBadge = `<span class="badge">−${pctPix}%</span>`;
+      } else {
+        dimsVal = (aw && ah) ? `${aw} × ${ah}` : (bw && bh ? `${bw} × ${bh}` : "—");
+        dimsBadge = `<span class="badge busy">${escapeHtml(t("gallery_unchanged"))}</span>`;
+      }
+
+      const srcFmt = sourceFormatLabel(item);
+      const outFmt = FORMAT_LABEL[item.outFormat] || item.outFormat;
+      const fmtVal = srcFmt === outFmt
+        ? escapeHtml(outFmt)
+        : `<s>${escapeHtml(srcFmt)}</s> → ${escapeHtml(outFmt)}`;
+
+      infoEl.innerHTML =
+        statTile(t("gallery_stat_size"), sizeVal, sizeBadge) +
+        statTile(t("gallery_stat_dims"), dimsVal, dimsBadge) +
+        statTile(t("gallery_stat_format"), fmtVal, "");
+    }
+
+    function go(delta) {
+      const n = index + delta;
+      if (n < 0 || n >= list.length) return;
+      index = n;
+      render();
+    }
+    function onKey(e) {
+      if (e.key === "Escape") close();
+      else if (e.key === "ArrowLeft") go(-1);
+      else if (e.key === "ArrowRight") go(1);
+    }
+
+    function open(id) {
+      list = queue.filter((q) => q.status === "done" && q.outUrl);
+      if (!list.length) return;
+      const found = list.findIndex((q) => q.id === id);
+      index = found < 0 ? 0 : found;
+      overlay.hidden = false;
+      document.addEventListener("keydown", onKey);
+      render();
+    }
+    function close() {
+      if (overlay.hidden) return;
+      overlay.hidden = true;
+      document.removeEventListener("keydown", onKey);
+      if (beforeUrl) { URL.revokeObjectURL(beforeUrl); beforeUrl = null; }
+      beforeImg.removeAttribute("src");
+      afterImg.removeAttribute("src");
+      list = [];
+    }
+    const isOpen = () => !overlay.hidden;
+
+    // Wiring.
+    box.addEventListener("pointerdown", onPointerDown);
+    prevBtn.addEventListener("click", () => go(-1));
+    nextBtn.addEventListener("click", () => go(1));
+    $("galleryClose").addEventListener("click", close);
+    overlay.addEventListener("click", (e) => { if (e.target === overlay) close(); });
+
+    return { open, close, isOpen };
+  })();
+
   /* --------------------------------------------------------- Event wiring */
   // Drop zone: click, keyboard, drag/drop.
   dropzone.addEventListener("click", () => fileInput.click());
@@ -3091,9 +3415,11 @@ footer.credit a { font-weight: 600; }
   cancelBtn.addEventListener("click", () => { cancelRequested = true; });
 
   // Summary actions.
+  galleryBtn.addEventListener("click", () => Gallery.open());
   $("downloadZip").addEventListener("click", downloadZip);
   $("downloadSeparate").addEventListener("click", downloadSeparate);
   $("clearAll").addEventListener("click", () => {
+    Gallery.close();
     for (const q of queue) if (q.outUrl) URL.revokeObjectURL(q.outUrl);
     queue.length = 0;
     itemsEl.innerHTML = "";
