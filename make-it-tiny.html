@@ -450,7 +450,29 @@ footer.credit a { font-weight: 600; }
      actually used. This keeps a page view to ~60 KB.
      NOTE: because the codecs are separate files, this page must be served over
      http(s); browsers block Workers/module fetches from file:// URLs.
+
+     OFFLINE SINGLE-FILE BUILD
+     -------------------------
+     Everything the app needs can be folded into one self-contained .html that runs
+     straight from a file:// URL. Run:
+
+         python3 make_offline_makeittiny.py
+
+     which reads this file, replaces the marked injection point below with the codec
+     source (its .wasm binaries rewritten to inline data: URLs), and writes
+     make-it-tiny-offline.html. The block is bounded by the MIT-OFFLINE:codec-source
+     START/END comments so the script can find it; in this (default) multi-file build
+     the placeholder <script> is empty and the app keeps loading the sibling files.
 ============================================================================ -->
+
+<!-- MIT-OFFLINE:codec-source START -->
+<!-- make_offline_makeittiny.py fills the element below with the codec module source
+     (wasm inlined as data: URLs). Leave it EMPTY in the source/multi-file build — an
+     empty element makes the app fall back to loading mit-codecs.min.js over http(s).
+     The type is text/plain so the browser never executes it directly; the app reads
+     its textContent and, when non-empty, runs it from a Blob URL (works from file://). -->
+<script type="text/plain" id="embeddedCodec"></script>
+<!-- MIT-OFFLINE:codec-source END -->
 
 <!-- ============================================================================
      Make It Tiny application code (unminified, commented for developers).
@@ -2526,7 +2548,21 @@ footer.credit a { font-weight: 600; }
   // the pool (and thus the bundle + WASM) is created only on the first optimize.
   // Encoding runs in a module Web Worker when available (keeping the UI responsive
   // and Cancel clickable), else on the main thread via a dynamic import fallback.
-  const CODEC_URL = new URL("mit-codecs.min.js", document.baseURI);
+  // Build flag: false in the source/multi-file build, flipped to true by
+  // make_offline_makeittiny.py in the single-file offline build. When true, the codec
+  // module + its wasm are embedded in #embeddedCodec, so the app must NOT reach out for
+  // the sibling mit-codecs.min.js / .wasm files (fetching them would fail from file://,
+  // and the embedded copy is authoritative anyway).
+  const EMBEDDED_OFFLINE = false; /* MIT-OFFLINE:flag */
+
+  // Default build: load the sibling mit-codecs.min.js (needs http(s)).
+  // Offline build: run the embedded source from a Blob URL, so both the module Worker
+  // and the import() fallback work from a file:// page.
+  const CODEC_URL = EMBEDDED_OFFLINE
+    ? new URL(URL.createObjectURL(new Blob(
+        [document.getElementById("embeddedCodec").textContent],
+        { type: "text/javascript" })))
+    : new URL("mit-codecs.min.js", document.baseURI);
   class CodecPool {
     constructor() {
       this.jobs = new Map();
