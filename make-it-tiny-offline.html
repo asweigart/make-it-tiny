@@ -235,6 +235,7 @@ input[type="range"] { width: 100%; accent-color: var(--accent); }
 }
 .item .meta { min-width: 0; }
 .item .name { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.item .name .rename { color: var(--text-dim); font-weight: 500; }
 .item .dims { color: var(--text-dim); font-size: .82rem; }
 .sizes { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; font-size: .9rem; margin-top: 4px; }
 .sizes .from { color: var(--text-dim); text-decoration: line-through; }
@@ -626,7 +627,7 @@ footer.credit a { font-weight: 600; }
 "use strict";
 (function () {
   // Single source of truth for the version string (semver).
-  const APP_VERSION = "1.0.0";
+  const APP_VERSION = "1.1.0";
 
   /* ------------------------------------------------------------------ i18n */
   // Only English is populated for now. Every UI string is keyed here and
@@ -2584,6 +2585,26 @@ footer.credit a { font-weight: 600; }
     return `${base}.${EXT[format]}`;
   }
 
+  // Give every item a download name that is unique across the queue. Converting can
+  // collapse distinct sources onto one name ("image.png" and "image.jpg" both become
+  // "image.webp"), so the later ones become "image-2.webp", "image-3.webp", … The
+  // suffix loop also steps over a name a real file already claims (an actual
+  // "image-2.png" alongside them), and names are compared case-insensitively because
+  // most file systems are. Assignment follows queue order, so a finished item is only
+  // ever renamed when something ahead of it is removed — hence the re-render.
+  function assignOutFilenames() {
+    const taken = new Set();
+    for (const q of queue) {
+      const want = outName(q.name, q.outBuffer ? q.outFormat : resolveFormat(q));
+      let name = want, n = 1;
+      while (taken.has(name.toLowerCase())) name = want.replace(/(\.[^.]+)$/, `-${++n}$1`);
+      taken.add(name.toLowerCase());
+      if (q.outFilename === name) continue;
+      q.outFilename = name;
+      if (q.status === "done" && q.el) renderItem(q);
+    }
+  }
+
   // Formats we can re-embed EXIF into with our own metadata module.
   const META_CAPABLE = { jpeg: true, png: true, webp: true, avif: false };
 
@@ -2871,9 +2892,9 @@ footer.credit a { font-weight: 600; }
     item.outBuffer = buf;
     item.outSize = buf.byteLength;
     item.outFormat = format;
-    item.outFilename = outName(item.name, format);
     const blob = new Blob([buf], { type: MIME[format] });
     item.outUrl = URL.createObjectURL(blob);
+    assignOutFilenames();  // this item is not "done" yet, so only others re-render here
     item.status = "done";
     renderItem(item);
   }
@@ -2923,11 +2944,19 @@ footer.credit a { font-weight: 600; }
       ? Math.max(0, Math.min(100, Math.round((item.outSize / item.originalSize) * 100)))
       : 100;
 
+    // When the output uses a different extension than the source, the downloaded file
+    // is renamed — show "image.png → image.webp" so that isn't a surprise.
+    const renamed = item.status === "done" && item.outFilename && item.outFilename !== item.name;
+    const nameText = renamed ? `${item.name} → ${item.outFilename}` : item.name;
+    const nameHtml = renamed
+      ? `${escapeHtml(item.name)} <span class="rename">→ ${escapeHtml(item.outFilename)}</span>`
+      : escapeHtml(item.name);
+
     const thumbSrc = item.outUrl || "";
     el.innerHTML = `
       <img class="thumb" alt="${escapeHtml(item.name)}" ${thumbSrc ? `src="${thumbSrc}"` : ""}>
       <div class="meta">
-        <div class="name" title="${escapeHtml(item.name)}">${escapeHtml(item.name)}</div>
+        <div class="name" title="${escapeHtml(nameText)}">${nameHtml}</div>
         <div class="dims">${dimsText(item)}</div>
         <div class="sizes">${sizeLine}</div>
         ${showBar ? `<div class="bar"><i style="width:${barPct}%"></i></div>` : ""}
@@ -2977,6 +3006,7 @@ footer.credit a { font-weight: 600; }
     if (Gallery.isOpen()) Gallery.close();  // the browsed snapshot may include this item
     if (item.outUrl) URL.revokeObjectURL(item.outUrl);
     if (item.el) item.el.remove();
+    assignOutFilenames();
     updateSummary();
     if (!queue.length) summary.classList.remove("show");
   }
@@ -3108,18 +3138,12 @@ footer.credit a { font-weight: 600; }
     return { build };
   })();
 
-  // Assign each finished item a unique download filename (handles collisions).
+  // The finished items, as download entries. Filenames were made unique across the
+  // whole queue by assignOutFilenames(), so what the row shows is what lands on disk.
   function uniqueNamedFiles() {
-    const done = queue.filter((q) => q.status === "done" && q.outBuffer);
-    const seen = new Map();
-    return done.map((q) => {
-      let name = q.outFilename;
-      if (seen.has(name)) {
-        const n = seen.get(name) + 1; seen.set(name, n);
-        name = name.replace(/(\.[^.]+)$/, `-${n}$1`);
-      } else { seen.set(name, 1); }
-      return { name, url: q.outUrl, data: new Uint8Array(q.outBuffer) };
-    });
+    return queue
+      .filter((q) => q.status === "done" && q.outBuffer)
+      .map((q) => ({ name: q.outFilename, url: q.outUrl, data: new Uint8Array(q.outBuffer) }));
   }
 
   function triggerDownload(url, filename) {
